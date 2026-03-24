@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="抗生素指引">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#161b22">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>抗生素參考指引</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117;--surface:#161b22;--surface2:#1c2330;--border:#30363d;
+  --accent:#58a6ff;--accent2:#3fb950;--warn:#f0883e;--danger:#ff7b72;--purple:#bc8cff;
+  --text:#e6edf3;--text2:#8b949e;--text3:#6e7681;
+  --mono:'IBM Plex Mono',monospace;--sans:'Noto Sans TC',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;padding-bottom:max(60px,env(safe-area-inset-bottom));padding-top:env(safe-area-inset-top);}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 16px 12px;position:sticky;top:0;z-index:100;}
+header h1{font-size:14px;font-weight:700;letter-spacing:.05em;color:var(--accent);font-family:var(--mono);}
+header p{font-size:10px;color:var(--text3);margin-top:2px;font-family:var(--mono);}
+.disclaimer{background:#1a1200;border-left:3px solid var(--warn);margin:10px 14px;padding:8px 12px;border-radius:4px;font-size:11px;color:#c9a227;line-height:1.5;}
+
+/* SEPSIS */
+.sepsis-banner{margin:10px 14px;background:#1a0d0d;border:1px solid #5a1a1a;border-radius:8px;overflow:hidden;}
+.sepsis-banner-header{background:#2a1010;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
+.sepsis-banner-header span{font-size:12px;font-weight:700;color:var(--danger);font-family:var(--mono);}
+.sepsis-arrow{color:var(--text3);font-size:11px;transition:transform .2s;}
+.sepsis-arrow.open{transform:rotate(180deg);}
+.sepsis-content{display:none;padding:12px 14px;}
+.sepsis-content.open{display:block;}
+.sepsis-block{margin-bottom:12px;}
+.sepsis-block:last-child{margin-bottom:0;}
+.sepsis-block-title{font-size:11px;font-weight:700;color:var(--warn);font-family:var(--mono);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;}
+.sepsis-item{font-size:12px;color:var(--text2);padding:5px 0;border-bottom:1px solid #2a1a1a;line-height:1.5;}
+.sepsis-item:last-child{border-bottom:none;}
+.sepsis-item strong{color:var(--text);font-family:var(--mono);}
+.sepsis-tag{display:inline-block;font-size:10px;font-family:var(--mono);padding:1px 6px;border-radius:3px;margin-left:4px;vertical-align:middle;}
+.tag-red{background:#2a0d0d;color:var(--danger);border:1px solid #4a1a1a;}
+.tag-orange{background:#2a1500;color:var(--warn);border:1px solid #4a2500;}
+.tag-blue{background:#0d1f37;color:var(--accent);border:1px solid #0d3060;}
+
+/* INPUTS */
+.section{margin:12px 14px 0;}
+.label{font-size:10px;font-weight:500;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px;font-family:var(--mono);}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;}
+.row-toggle{display:flex;gap:6px;margin-bottom:10px;}
+.toggle-btn{flex:1;padding:7px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .15s;}
+.toggle-btn.active{background:#0d2137;border-color:var(--accent);color:var(--accent);}
+.toggle-btn.active-po{background:#0d2a1a;border-color:var(--accent2);color:var(--accent2);}
+.input-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.input-row:last-child{margin-bottom:0;}
+input[type="number"]{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:9px 10px;color:var(--text);font-family:var(--mono);font-size:17px;outline:none;transition:border-color .15s;-webkit-appearance:none;width:100%;}
+input[type="number"]:focus{border-color:var(--accent);}
+.sex-toggle{display:flex;gap:6px;margin-top:8px;}
+.sex-btn{flex:1;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .15s;}
+.sex-btn.active{background:#1a0d37;border-color:var(--purple);color:var(--purple);}
+.unit-label{font-size:10px;color:var(--text3);font-family:var(--mono);white-space:nowrap;}
+.egfr-display{margin-top:8px;padding:7px 10px;border-radius:6px;font-family:var(--mono);font-size:11px;display:none;line-height:1.5;}
+.egfr-display.show{display:block;}
+.stage-1{background:#0d2a1a;color:#3fb950;border:1px solid #1a4a2a;}
+.stage-2{background:#0d2a1a;color:#7ee787;border:1px solid #1a4a2a;}
+.stage-3{background:#1a2200;color:#e3b341;border:1px solid #3a3300;}
+.stage-4{background:#2a1500;color:var(--warn);border:1px solid #4a2500;}
+.stage-5{background:#2a0d0d;color:var(--danger);border:1px solid #4a1a1a;}
+
+/* ROUTE TOGGLE */
+.route-bar{margin:12px 14px 0;}
+.route-toggle{display:flex;gap:6px;}
+.route-btn{flex:1;padding:9px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;font-family:var(--mono);cursor:pointer;transition:all .15s;text-align:center;font-weight:600;}
+.route-btn.active-iv{background:#0d2137;border-color:var(--accent);color:var(--accent);}
+.route-btn.active-po{background:#0d2a1a;border-color:var(--accent2);color:var(--accent2);}
+
+/* SITE GRID */
+.site-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.site-btn{padding:10px 6px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:11px;font-family:var(--sans);font-weight:500;cursor:pointer;transition:all .15s;text-align:center;line-height:1.4;position:relative;}
+.site-btn .icon{font-size:18px;display:block;margin-bottom:3px;}
+.site-btn.active{background:#0d2137;border-color:var(--accent);color:var(--text);}
+.site-btn .check{position:absolute;top:5px;right:6px;font-size:10px;color:var(--accent2);display:none;}
+.site-btn.active .check{display:block;}
+.multi-hint{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:6px;text-align:center;}
+
+/* RESULTS */
+.results{margin:14px 14px 0;}
+.abx-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:9px;overflow:hidden;}
+.abx-header{padding:10px 12px;display:flex;align-items:flex-start;justify-content:space-between;border-bottom:1px solid var(--border);gap:8px;}
+.abx-name-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.abx-name{font-size:13px;font-weight:700;color:var(--text);font-family:var(--mono);}
+.abx-ref{font-size:10px;color:var(--accent);font-family:var(--mono);text-decoration:none;border:1px solid #1a3560;border-radius:3px;padding:1px 5px;white-space:nowrap;}
+.qtc-badge{font-size:10px;font-family:var(--mono);padding:2px 6px;border-radius:3px;background:#2a1500;color:#ffb347;border:1px solid #5a3000;white-space:nowrap;}
+.abx-class{font-size:10px;color:var(--text3);margin-top:3px;font-family:var(--mono);line-height:1.3;}
+.tier-badge{font-size:10px;font-family:var(--mono);padding:3px 7px;border-radius:20px;font-weight:600;white-space:nowrap;flex-shrink:0;margin-top:1px;}
+.tier-first{background:#0d2a1a;color:var(--accent2);border:1px solid #1a4a2a;}
+.tier-alt{background:#0d1f37;color:var(--accent);border:1px solid #0d3060;}
+.tier-reserve{background:#2a1500;color:var(--warn);border:1px solid #4a2500;}
+.tier-last{background:#1a0d2a;color:var(--purple);border:1px solid #3a1a5a;}
+.abx-body{padding:10px 12px;}
+.dose-row{display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;border-bottom:1px solid var(--border);gap:8px;}
+.dose-row:last-child{border-bottom:none;padding-bottom:0;}
+.dose-stage{font-size:10px;color:var(--text3);font-family:var(--mono);flex:0 0 auto;padding-top:2px;max-width:95px;line-height:1.3;}
+.dose-info{text-align:right;flex:1;}
+.dose-value{font-size:12px;font-family:var(--mono);color:var(--text);font-weight:600;line-height:1.4;}
+.dose-value.highlight-dose{color:var(--accent2);}
+.dose-value.adjusted{color:var(--warn);}
+.dose-note{font-size:10px;color:var(--text3);margin-top:1px;line-height:1.3;}
+
+/* Coverage tags - single style, bright */
+.coverage-row{display:flex;flex-wrap:wrap;gap:4px;padding:8px 12px 10px;border-top:1px solid var(--border);}
+.ctag{font-size:10px;padding:2px 7px;border-radius:4px;font-family:var(--mono);font-weight:500;background:#1a2a3a;color:#a8d8ff;border:1px solid #2a4a6a;}
+
+.section-divider{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.1em;text-transform:uppercase;padding:4px 0 7px;border-bottom:1px solid var(--border);margin-bottom:9px;}
+.empty-state{text-align:center;padding:36px 20px;color:var(--text3);font-size:13px;line-height:1.8;}
+.empty-icon{font-size:36px;margin-bottom:10px;}
+.abx-note{background:#0d1f37;border:1px solid #1a3560;border-radius:6px;padding:8px 12px;margin:0 0 10px;font-size:11px;color:#8ab4f8;font-family:var(--mono);line-height:1.6;}
+.multi-result-header{background:#0d2a1a;border:1px solid #1a4a2a;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:#7ee787;font-family:var(--mono);line-height:1.6;}
+.shared-badge{display:inline-block;background:#0d2a1a;color:#3fb950;border:1px solid #1a4a2a;font-size:9px;font-family:var(--mono);padding:1px 5px;border-radius:3px;margin-left:4px;vertical-align:middle;}
+.po-only-note{background:#0d2a1a;border:1px solid #1a4a2a;border-radius:6px;padding:7px 12px;margin-bottom:10px;font-size:11px;color:#7ee787;font-family:var(--mono);}
+.hidden{display:none!important;}
+</style>
+</head>
+<body>
+<header>
+  <h1>🩺 抗生素參考指引 v7</h1>
+  <p>surgical resident reference · 僅供臨床參考使用</p>
+</header>
+<div class="disclaimer">⚠️ 本工具僅供住院醫師參考，不取代臨床判斷。實際用藥請依院內antibiogram及主治醫師指示。</div>
+
+<!-- SEPSIS -->
+<div class="sepsis-banner">
+  <div class="sepsis-banner-header" onclick="toggleSepsis()">
+    <span>🚨 Sepsis / Septic Shock Empirical Coverage</span>
+    <span class="sepsis-arrow" id="sepsis-arrow">▼</span>
+  </div>
+  <div class="sepsis-content" id="sepsis-content">
+    <div class="sepsis-block">
+      <div class="sepsis-block-title">⏱ Hour-1 Bundle（Sepsis-3）</div>
+      <div class="sepsis-item">血培養 × 2 sets（抗生素前）<span class="sepsis-tag tag-red">先備</span></div>
+      <div class="sepsis-item">Lactate 抽血（>2 mmol/L = sepsis；>4 = shock）<span class="sepsis-tag tag-red">先備</span></div>
+      <div class="sepsis-item">30 ml/kg IV crystalloid bolus（若低血壓或 lactate ≥4）</div>
+      <div class="sepsis-item">Broad-spectrum antibiotics <strong>within 1 hour</strong><span class="sepsis-tag tag-red">緊急</span></div>
+      <div class="sepsis-item">Norepinephrine if MAP &lt; 65 mmHg after resuscitation<span class="sepsis-tag tag-orange">升壓藥</span></div>
+    </div>
+    <div class="sepsis-block">
+      <div class="sepsis-block-title">💊 Empirical Regimen（來源未明）</div>
+      <div class="sepsis-item"><strong>社區型（CAP/UTI/IAI）</strong><br>Ceftriaxone 2g Q24h + Metronidazole 500mg Q8h IV</div>
+      <div class="sepsis-item"><strong>院內型 / 免疫不全 / 近期住院 / 插管</strong><br>Piperacillin-Tazobactam 4.5g Q6h IV 或 Meropenem 1g Q8h IV</div>
+      <div class="sepsis-item"><strong>MRSA 危險因子（IVDU、皮膚感染、鼻腔帶菌）</strong><br>加上 Vancomycin 15–20 mg/kg Q8–12h IV<span class="sepsis-tag tag-orange">加疊</span></div>
+      <div class="sepsis-item"><strong>Septic shock（快速惡化）</strong><br>Meropenem 1–2g Q8h + Vancomycin ± Micafungin</div>
+      <div class="sepsis-item"><strong>Candida 高風險（TPN >5天、腹腔手術、長期廣效抗生素）</strong><br>Micafungin 100mg Q24h IV 或 Caspofungin 70mg→50mg Q24h<span class="sepsis-tag tag-blue">Antifungal</span></div>
+    </div>
+    <div class="sepsis-block">
+      <div class="sepsis-block-title">📉 De-escalation 原則</div>
+      <div class="sepsis-item">培養結果出來後 48–72h 盡快 narrow-spectrum</div>
+      <div class="sepsis-item">若血培養陰性 + 臨床改善 → 考慮停 Vancomycin</div>
+      <div class="sepsis-item">菌血症 14天 ｜ IAI/UTI 7–10天 ｜ SSTI 5–7天</div>
+      <div class="sepsis-item">Procalcitonin 趨勢可輔助判斷停藥時機</div>
+    </div>
+  </div>
+</div>
+
+<!-- Kidney Function -->
+<div class="section">
+  <div class="label">腎功能輸入</div>
+  <div class="card">
+    <div class="row-toggle">
+      <button class="toggle-btn active" onclick="setMode('egfr')" id="btn-egfr">eGFR</button>
+      <button class="toggle-btn" onclick="setMode('cr')" id="btn-cr">Creatinine (Cr)</button>
+    </div>
+    <div class="input-row">
+      <input type="number" id="kidney-input" placeholder="例：45" min="0" step="0.1" oninput="updateKidney()">
+      <span class="unit-label" id="unit-label">ml/min/1.73m²</span>
+    </div>
+    <div id="cr-extras" style="display:none;">
+      <div class="input-row" style="margin-top:8px;">
+        <input type="number" id="age-input" placeholder="年齡（歲）" min="1" max="120" step="1" oninput="if(document.getElementById('kidney-input').value) updateKidney()">
+        <span class="unit-label">歲</span>
+      </div>
+      <div class="sex-toggle">
+        <button class="sex-btn active" onclick="setSex('M')" id="btn-M">♂ 男性</button>
+        <button class="sex-btn" onclick="setSex('F')" id="btn-F">♀ 女性</button>
+      </div>
+    </div>
+    <div class="egfr-display" id="egfr-display"></div>
+  </div>
+</div>
+
+<!-- Route Toggle -->
+<div class="route-bar">
+  <div class="label">給藥途徑</div>
+  <div class="route-toggle">
+    <button class="route-btn active-iv" onclick="setRoute('all')" id="route-all">💉 IV + PO（全部）</button>
+    <button class="route-btn" onclick="setRoute('po')" id="route-po">💊 口服 PO（出院用）</button>
+  </div>
+</div>
+
+<!-- Infection Site -->
+<div class="section" style="margin-top:12px;">
+  <div class="label">感染部位 <span style="color:var(--accent);font-size:9px;">（可複選）</span></div>
+  <div class="site-grid">
+    <button class="site-btn" onclick="toggleSite('uti')" id="site-uti"><span class="check">✓</span><span class="icon">💧</span>泌尿道 UTI</button>
+    <button class="site-btn" onclick="toggleSite('pneumonia')" id="site-pneumonia"><span class="check">✓</span><span class="icon">🫁</span>肺炎 Pneumonia</button>
+    <button class="site-btn" onclick="toggleSite('intraabdominal')" id="site-intraabdominal"><span class="check">✓</span><span class="icon">🔬</span>腹腔 Intra-abd</button>
+    <button class="site-btn" onclick="toggleSite('ssti')" id="site-ssti"><span class="check">✓</span><span class="icon">🩹</span>皮膚軟組織 SSTI</button>
+    <button class="site-btn" onclick="toggleSite('bacteremia')" id="site-bacteremia"><span class="check">✓</span><span class="icon">🩸</span>菌血症 Bacteremia</button>
+    <button class="site-btn" onclick="toggleSite('hepatobiliary')" id="site-hepatobiliary"><span class="check">✓</span><span class="icon">🟡</span>肝膽道 Hepatobiliary</button>
+    <button class="site-btn" onclick="toggleSite('cns')" id="site-cns"><span class="check">✓</span><span class="icon">🧠</span>中樞神經 CNS</button>
+    <button class="site-btn" onclick="toggleSite('bone')" id="site-bone"><span class="check">✓</span><span class="icon">🦴</span>骨骼關節 Bone/Joint</button>
+  </div>
+  <div class="multi-hint" id="multi-hint"></div>
+</div>
+
+<div class="results" id="results">
+  <div class="empty-state"><div class="empty-icon">💊</div>請輸入腎功能數值<br>並選擇感染部位<br>以顯示抗生素建議</div>
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────────
+var currentMode = 'egfr';
+var currentEgfr = null;
+var currentSex  = 'M';
+var currentRoute = 'all';
+var selectedSites = [];
+
+// ── SEPSIS TOGGLE ─────────────────────────────────────────────────────────────
+function toggleSepsis() {
+  document.getElementById('sepsis-arrow').classList.toggle('open');
+  document.getElementById('sepsis-content').classList.toggle('open');
+}
+
+// ── MODE / ROUTE / SEX ────────────────────────────────────────────────────────
+function setMode(mode) {
+  currentMode = mode;
+  currentEgfr = null;
+  document.getElementById('kidney-input').value = '';
+  document.getElementById('egfr-display').className = 'egfr-display';
+  document.getElementById('btn-egfr').className = 'toggle-btn' + (mode === 'egfr' ? ' active' : '');
+  document.getElementById('btn-cr').className   = 'toggle-btn' + (mode === 'cr'   ? ' active' : '');
+  document.getElementById('unit-label').textContent  = mode === 'egfr' ? 'ml/min/1.73m²' : 'mg/dL';
+  document.getElementById('kidney-input').placeholder = mode === 'egfr' ? '例：45' : '例：1.8';
+  document.getElementById('cr-extras').style.display  = mode === 'cr'   ? 'block' : 'none';
+  renderResults();
+}
+
+function setSex(s) {
+  currentSex = s;
+  document.getElementById('btn-M').className = 'sex-btn' + (s === 'M' ? ' active' : '');
+  document.getElementById('btn-F').className = 'sex-btn' + (s === 'F' ? ' active' : '');
+  updateKidney();
+}
+
+function setRoute(r) {
+  currentRoute = r;
+  document.getElementById('route-all').className = 'route-btn' + (r === 'all' ? ' active-iv' : '');
+  document.getElementById('route-po').className  = 'route-btn' + (r === 'po'  ? ' active-po' : '');
+  renderResults();
+}
+
+// ── KIDNEY FUNCTION ───────────────────────────────────────────────────────────
+function ckdEpi2021(cr, age, sex) {
+  if (!cr || cr <= 0 || !age || age <= 0) return null;
+  var kappa  = sex === 'F' ? 0.7   : 0.9;
+  var alpha  = sex === 'F' ? -0.241 : -0.302;
+  var sexFac = sex === 'F' ? 1.012 : 1.0;
+  var ratio  = cr / kappa;
+  var result = 142 * Math.pow(Math.min(ratio, 1), alpha)
+                   * Math.pow(Math.max(ratio, 1), -1.200)
+                   * Math.pow(0.9938, age)
+                   * sexFac;
+  return Math.round(result);
+}
+
+function getStage(e) {
+  if (e >= 90) return { label: 'G1 正常（≥90）',        cls: 'stage-1' };
+  if (e >= 60) return { label: 'G2 輕度下降（60–89）',  cls: 'stage-2' };
+  if (e >= 30) return { label: 'G3 中度下降（30–59）',  cls: 'stage-3' };
+  if (e >= 15) return { label: 'G4 重度下降（15–29）',  cls: 'stage-4' };
+  return               { label: 'G5 腎衰竭（<15）',     cls: 'stage-5' };
+}
+
+function updateKidney() {
+  var val = document.getElementById('kidney-input').value.trim();
+  var cr  = parseFloat(val);
+  var display = document.getElementById('egfr-display');
+
+  // 沒有輸入 → 清空
+  if (val === '' || isNaN(cr) || cr <= 0) {
+    currentEgfr = null;
+    display.className = 'egfr-display';
+    renderResults();
+    return;
+  }
+
+  // 計算 eGFR
+  if (currentMode === 'egfr') {
+    currentEgfr = cr;
+  } else {
+    var ageVal = parseFloat(document.getElementById('age-input').value);
+    if (isNaN(ageVal) || ageVal <= 0) ageVal = 50;
+    currentEgfr = ckdEpi2021(cr, ageVal, currentSex);
+  }
+
+  // 顯示結果
+  if (currentEgfr && currentEgfr > 0) {
+    var s = getStage(currentEgfr);
+    display.className = 'egfr-display show ' + s.cls;
+    if (currentMode === 'cr') {
+      var ageVal2 = parseFloat(document.getElementById('age-input').value) || 50;
+      display.innerHTML = 'CKD-EPI 2021 估算 eGFR ≈ <strong>' + currentEgfr + '</strong> ml/min/1.73m²<br>'
+        + '（Cr ' + cr + ' mg/dL，' + ageVal2 + '歲，' + (currentSex === 'M' ? '男' : '女') + '）— ' + s.label;
+    } else {
+      display.innerHTML = 'eGFR ' + currentEgfr + ' ml/min/1.73m² — ' + s.label;
+    }
+  } else {
+    currentEgfr = null;
+    display.className = 'egfr-display';
+  }
+
+  renderResults();
+}
+
+// ── SITE SELECTION ────────────────────────────────────────────────────────────
+function toggleSite(site) {
+  var idx = selectedSites.indexOf(site);
+  if (idx >= 0) {
+    selectedSites.splice(idx, 1);
+    document.getElementById('site-' + site).classList.remove('active');
+  } else {
+    selectedSites.push(site);
+    document.getElementById('site-' + site).classList.add('active');
+  }
+
+  var hint = document.getElementById('multi-hint');
+  hint.textContent = selectedSites.length > 1
+    ? '已選 ' + selectedSites.length + ' 個部位 → 顯示共同有效抗生素'
+    : '';
+
+  renderResults();
+
+  // 有腎功能且有選部位 → 自動捲到結果
+  if (currentEgfr !== null && selectedSites.length > 0) {
+    setTimeout(function() {
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
+  }
+}
+
+// ── DOSE ACTIVE ───────────────────────────────────────────────────────────────
+function isDoseActive(stageText, egfr) {
+  if (egfr === null) return false;
+  var t = stageText.toLowerCase();
+  if ((t.indexOf('hd') >= 0 || t.indexOf('透析') >= 0) && egfr < 15) return true;
+  var ge = t.match(/≥\s*(\d+)/); if (ge && egfr >= parseInt(ge[1])) return true;
+  var rng = t.match(/(\d+)\s*[–\-]\s*(\d+)/);
+  if (rng) { var lo = parseInt(rng[1]), hi = parseInt(rng[2]); if (egfr >= lo && egfr <= hi) return true; }
+  var lt = t.match(/<\s*(\d+)/); if (lt && egfr < parseInt(lt[1])) return true;
+  var le = t.match(/≤\s*(\d+)/); if (le && egfr <= parseInt(le[1])) return true;
+  if (t.indexOf('任何') >= 0 || t.indexOf('any') >= 0) return true;
+  return false;
+}
+
+// ── HELPER: PO filter ─────────────────────────────────────────────────────────
+function hasPO(drug) {
+  return drug.doses.some(function(d) { return d.route === 'po' || d.route === 'both'; });
+}
+
+
+// ── DRUG REFERENCE LINKS (Drugs.com monograph) ───────────────────────────────
+var drugSources = {
+  // Fluoroquinolones
+  'Ciprofloxacin':            'https://www.drugs.com/monograph/ciprofloxacin.html',
+  'Levofloxacin':             'https://www.drugs.com/monograph/levofloxacin.html',
+  'Moxifloxacin':             'https://www.drugs.com/monograph/moxifloxacin.html',
+  // Cephalosporins
+  'Ceftriaxone':              'https://www.drugs.com/monograph/ceftriaxone.html',
+  'Cefazolin':                'https://www.drugs.com/monograph/cefazolin.html',
+  'Cephalexin':               'https://www.drugs.com/monograph/cephalexin.html',
+  'Cefadroxil':               'https://www.drugs.com/monograph/cefadroxil.html',
+  'Cefuroxime':               'https://www.drugs.com/monograph/cefuroxime.html',
+  'Cefdinir':                 'https://www.drugs.com/monograph/cefdinir.html',
+  'Cefixime':                 'https://www.drugs.com/monograph/cefixime.html',
+  'Cefpodoxime':              'https://www.drugs.com/monograph/cefpodoxime.html',
+  'Cefepime':                 'https://www.drugs.com/monograph/cefepime.html',
+  'Ceftaroline':              'https://www.drugs.com/monograph/ceftaroline.html',
+  // Penicillins
+  'Amoxicillin':              'https://www.drugs.com/monograph/amoxicillin.html',
+  'Ampicillin':               'https://www.drugs.com/monograph/ampicillin.html',
+  'Oxacillin':                'https://www.drugs.com/monograph/oxacillin.html',
+  'Dicloxacillin':            'https://www.drugs.com/monograph/dicloxacillin.html',
+  'Cloxacillin':              'https://www.drugs.com/monograph/cloxacillin.html',
+  'Penicillin VK':            'https://www.drugs.com/monograph/penicillin-v-potassium.html',
+  // Combination penicillins
+  'Amoxicillin-Clavulanate':  'https://www.drugs.com/monograph/amoxicillin-clavulanate-potassium.html',
+  'Ampicillin-Sulbactam':     'https://www.drugs.com/monograph/ampicillin-sulbactam.html',
+  'Piperacillin-Tazobactam':  'https://www.drugs.com/monograph/piperacillin-tazobactam.html',
+  // Carbapenems
+  'Meropenem':                'https://www.drugs.com/monograph/meropenem.html',
+  'Ertapenem':                'https://www.drugs.com/monograph/ertapenem.html',
+  'Imipenem-Cilastatin':      'https://www.drugs.com/monograph/imipenem-cilastatin.html',
+  // Novel beta-lactams
+  'Ceftazidime-Avibactam':    'https://www.drugs.com/monograph/ceftazidime-avibactam.html',
+  'Ceftolozane-Tazobactam':   'https://www.drugs.com/monograph/ceftolozane-tazobactam.html',
+  // Glycopeptides
+  'Vancomycin':               'https://www.drugs.com/monograph/vancomycin.html',
+  // Lipopeptides / Oxazolidinones
+  'Linezolid':                'https://www.drugs.com/monograph/linezolid.html',
+  'Daptomycin':               'https://www.drugs.com/monograph/daptomycin.html',
+  // Tetracyclines / Glycylcyclines
+  'Tigecycline':              'https://www.drugs.com/monograph/tigecycline.html',
+  'Doxycycline':              'https://www.drugs.com/monograph/doxycycline.html',
+  'Minocycline':              'https://www.drugs.com/monograph/minocycline.html',
+  // Macrolides
+  'Azithromycin':             'https://www.drugs.com/monograph/azithromycin.html',
+  'Clarithromycin':           'https://www.drugs.com/monograph/clarithromycin.html',
+  'Erythromycin':             'https://www.drugs.com/monograph/erythromycin.html',
+  // Lincosamides
+  'Clindamycin':              'https://www.drugs.com/monograph/clindamycin.html',
+  // Nitroimidazoles / Sulfonamides / Others
+  'Metronidazole':            'https://www.drugs.com/monograph/metronidazole.html',
+  'TMP-SMX':                  'https://www.drugs.com/monograph/trimethoprim-sulfamethoxazole.html',
+  'Nitrofurantoin':           'https://www.drugs.com/monograph/nitrofurantoin.html',
+  'Fosfomycin':               'https://www.drugs.com/monograph/fosfomycin.html',
+  'Colistin':                 'https://www.drugs.com/monograph/colistin.html',
+  // Aminoglycosides
+  'Gentamicin':               'https://www.drugs.com/monograph/gentamicin.html',
+  'Tobramycin':               'https://www.drugs.com/monograph/tobramycin.html',
+  'Amikacin':                 'https://www.drugs.com/monograph/amikacin.html',
+  // Antifungals
+  'Fluconazole':              'https://www.drugs.com/monograph/fluconazole.html',
+  'Voriconazole':             'https://www.drugs.com/monograph/voriconazole.html',
+  'Micafungin':               'https://www.drugs.com/monograph/micafungin.html',
+  'Liposomal Amphotericin B': 'https://www.drugs.com/monograph/amphotericin-b-liposomal.html',
+  // Antivirals / Others
+  'Acyclovir':                'https://www.drugs.com/monograph/acyclovir.html',
+  'Valacyclovir':             'https://www.drugs.com/monograph/valacyclovir.html',
+  'Rifampin':                 'https://www.drugs.com/monograph/rifampin.html',
+  // Combos → link to primary drug
+  'Cefazolin + Metronidazole':     'https://www.drugs.com/monograph/cefazolin.html',
+  'Ceftriaxone + Metronidazole':   'https://www.drugs.com/monograph/ceftriaxone.html',
+  'Ciprofloxacin + Metronidazole': 'https://www.drugs.com/monograph/ciprofloxacin.html',
+  'Pip-Tazo + Vancomycin':         'https://www.drugs.com/monograph/piperacillin-tazobactam.html',
+  'Ciprofloxacin / Levofloxacin':  'https://www.drugs.com/monograph/ciprofloxacin.html',
+  'Micafungin / Caspofungin':      'https://www.drugs.com/monograph/micafungin.html',
+};
+
+var siteGuidelines = {
+  uti:           { label: 'IDSA cUTI 2025',    url: 'https://www.idsociety.org/practice-guideline/complicated-urinary-tract-infections/' },
+  pneumonia:     { label: 'ATS/IDSA CAP 2019', url: 'https://www.idsociety.org/practice-guideline/community-acquired-pneumonia-cap-in-adults/' },
+  intraabdominal:{ label: 'IDSA IAI 2024',     url: 'https://www.idsociety.org/practice-guideline/intra-abdominal-infections/' },
+  ssti:          { label: 'IDSA SSTI 2014',    url: 'https://www.idsociety.org/practice-guideline/skin-and-soft-tissue-infections/' },
+  bacteremia:    { label: 'AHA/IDSA IE 2015',  url: 'https://www.idsociety.org/practice-guideline/endocarditis-management/' },
+  hepatobiliary: { label: 'IDSA IAI 2024',     url: 'https://www.idsociety.org/practice-guideline/intra-abdominal-infections/' },
+  cns:           { label: 'IDSA Meningitis',   url: 'https://www.idsociety.org/practice-guideline/bacterial-meningitis/' },
+  bone:          { label: 'IDSA MRSA 2011',    url: 'https://www.idsociety.org/practice-guideline/mrsa/' },
+  mrsa:          { label: 'IDSA MRSA 2011',    url: 'https://www.idsociety.org/practice-guideline/mrsa/' },
+  amr:           { label: 'IDSA AMR 2024',     url: 'https://www.idsociety.org/practice-guideline/amr-guidance/' },
+};
+
+
+
+// refs removed
+
+// ── DATABASE ──────────────────────────────────────────────────────────────────
+// po: true = has oral form; qtc: true = QTc prolongation risk
+// route field on dose: 'iv','po','both'
+const abx={
+  uti:{title:'泌尿道感染 (UTI)',note:'重症UTI/Urosepsis→優先IV。輕症非複雜性UTI可口服。培養後48h de-escalate。',drugs:[
+    {name:'Ciprofloxacin',class:'Fluoroquinolone (2nd gen)',tier:'first',tierLabel:'首選 (輕-中度)',po:true,qtc:true,
+     coverage:['E. coli','Klebsiella pneumoniae','Pseudomonas aeruginosa','Proteus mirabilis','Enterobacter spp.'],
+     doses:[{stage:'eGFR ≥ 30',value:'400mg Q12h IV / 500mg Q12h PO',route:'both'},
+            {stage:'eGFR 10–29',value:'200–400mg Q18–24h IV / 250–500mg Q24h PO',adjusted:true,route:'both',note:'延長間隔'},
+            {stage:'eGFR < 10 / HD',value:'200mg Q24h IV / 250mg Q24h PO（透析後補充）',adjusted:true,route:'both'}]},
+    {name:'Ceftriaxone',class:'3rd-gen Cephalosporin',tier:'first',tierLabel:'首選 (中-重度 IV)',po:false,qtc:false,
+     coverage:['E. coli','Klebsiella pneumoniae','Proteus mirabilis','Enterobacter spp.'],
+     doses:[{stage:'任何腎功能',value:'1–2g Q24h IV',note:'肝臟代謝，無需腎調整',route:'iv'}]},
+    {name:'Levofloxacin',class:'Fluoroquinolone (3rd gen)',tier:'first',tierLabel:'首選 (PO降階)',po:true,qtc:true,
+     coverage:['E. coli','Klebsiella pneumoniae','Pseudomonas aeruginosa (部分)','Atypical'],
+     doses:[{stage:'eGFR ≥ 50',value:'750mg Q24h PO/IV',route:'both'},
+            {stage:'eGFR 20–49',value:'750mg loading → 500mg Q24h',adjusted:true,route:'both'},
+            {stage:'eGFR 10–19',value:'750mg loading → 250mg Q24h',adjusted:true,route:'both'},
+            {stage:'eGFR < 10 / HD',value:'500mg loading → 250mg Q48h',adjusted:true,route:'both'}]},
+    {name:'TMP-SMX',class:'Folate antagonist (Bactrim DS)',tier:'alt',tierLabel:'替代 (口服輕症)',po:true,qtc:false,
+     coverage:['E. coli (需確認敏感性)','Klebsiella pneumoniae','Listeria monocytogenes'],
+     doses:[{stage:'eGFR ≥ 30',value:'DS (160/800mg) Q12h PO',note:'需依院內antibiogram確認',route:'po'},
+            {stage:'eGFR 15–29',value:'DS Q24h PO（謹慎）',adjusted:true,route:'po'},
+            {stage:'eGFR < 15 / HD',value:'避免使用',adjusted:true,note:'高鉀血症風險',route:'po'}]},
+    {name:'Nitrofurantoin',class:'Nitrofuran（下泌尿道專用）',tier:'alt',tierLabel:'替代 (非複雜性UTI)',po:true,qtc:false,
+     coverage:['E. coli','Enterococcus faecalis','Staphylococcus saprophyticus'],
+     doses:[{stage:'eGFR ≥ 30',value:'Macrocrystal 100mg Q12h PO × 5天',note:'僅適用膀胱炎，不可用於腎盂腎炎',route:'po'},
+            {stage:'eGFR < 30',value:'避免使用',adjusted:true,note:'腎功能不足→藥物無法在尿中達有效濃度',route:'po'}]},
+    {name:'Fosfomycin',class:'Phosphonic acid antibiotic',tier:'alt',tierLabel:'替代 (單劑口服)',po:true,qtc:false,
+     coverage:['E. coli','Enterococcus faecalis','部分ESBL E. coli'],
+     doses:[{stage:'eGFR ≥ 10',value:'3g 單劑 PO（沖泡粉劑）',note:'非複雜性膀胱炎單次給藥；ESBL UTI替代選項',route:'po'},
+            {stage:'eGFR < 10 / HD',value:'避免使用',adjusted:true,route:'po'}]},
+    {name:'Piperacillin-Tazobactam',class:'Beta-lactam / BLI',tier:'alt',tierLabel:'替代 (Pseudomonas覆蓋)',po:false,qtc:false,
+     coverage:['Pseudomonas aeruginosa','Enterococcus faecalis','ESBL (部分)','Bacteroides fragilis'],
+     doses:[{stage:'eGFR ≥ 40',value:'3.375g Q6h IV',route:'iv'},
+            {stage:'eGFR 20–39',value:'2.25g Q6h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 20 / HD',value:'2.25g Q8h IV（透析後補充）',adjusted:true,route:'iv'}]},
+    {name:'Ertapenem',class:'Carbapenem Group 1',tier:'reserve',tierLabel:'保留 (ESBL確診)',po:false,qtc:false,
+     coverage:['ESBL-producing E. coli','ESBL-producing Klebsiella','Bacteroides fragilis'],
+     doses:[{stage:'eGFR ≥ 30',value:'1g Q24h IV',route:'iv'},
+            {stage:'eGFR < 30 / HD',value:'500mg Q24h IV',adjusted:true,note:'不覆蓋Pseudomonas',route:'iv'}]},
+    {name:'Meropenem',class:'Carbapenem Group 2',tier:'reserve',tierLabel:'保留 (MDR/CRE)',po:false,qtc:false,
+     coverage:['ESBL producers','Pseudomonas aeruginosa','CRE (部分)','Acinetobacter baumannii'],
+     doses:[{stage:'eGFR ≥ 50',value:'1g Q8h IV',route:'iv'},
+            {stage:'eGFR 25–49',value:'1g Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 10–24',value:'500mg Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 10 / HD',value:'500mg Q24h IV',adjusted:true,route:'iv'}]},
+    {name:'Trimethoprim',class:'Folate antagonist（單方，無Sulfa）',tier:'alt',tierLabel:'替代 (輕症/Sulfa過敏)',po:true,qtc:false,
+     coverage:['E. coli (需確認敏感)','Klebsiella pneumoniae'],
+     doses:[{stage:'eGFR ≥ 30',value:'200mg Q12h PO × 7天',note:'適合對SMX過敏的病人',route:'po'},
+            {stage:'eGFR 15–29',value:'200mg Q24h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 15',value:'避免使用',adjusted:true,route:'po'}]},
+    {name:'Cefixime',class:'3rd-gen Cephalosporin（口服）',tier:'alt',tierLabel:'替代 (PO降階)',po:true,qtc:false,
+     coverage:['E. coli','Klebsiella pneumoniae','Proteus mirabilis','H. influenzae'],
+     doses:[{stage:'eGFR ≥ 30',value:'400mg Q24h PO 或 200mg Q12h PO',route:'po'},
+            {stage:'eGFR 15–29',value:'200mg Q24h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 15 / HD',value:'100mg Q24h PO',adjusted:true,route:'po'}]},
+    {name:'Cefpodoxime',class:'3rd-gen Cephalosporin（口服）',tier:'alt',tierLabel:'替代 (PO降階)',po:true,qtc:false,
+     coverage:['E. coli','Klebsiella pneumoniae','Proteus mirabilis','Streptococcus spp.'],
+     doses:[{stage:'eGFR ≥ 30',value:'200mg Q12h PO',route:'po'},
+            {stage:'eGFR 10–29',value:'200mg Q24h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 10 / HD',value:'100mg Q24h PO',adjusted:true,route:'po'}]},
+    {name:'Vancomycin',class:'Glycopeptide',tier:'reserve',tierLabel:'保留 (MRSA/Enterococcus)',po:false,qtc:false,
+     coverage:['MRSA','VRE (E. faecium)','Enterococcus faecalis'],
+     doses:[{stage:'eGFR ≥ 50',value:'15–20 mg/kg Q8–12h IV',note:'AUC/MIC 400–600',route:'iv'},
+            {stage:'eGFR 20–49',value:'15–20 mg/kg Q12–24h IV',adjusted:true,note:'TDM',route:'iv'},
+            {stage:'eGFR < 20',value:'依AUC調整頻率',adjusted:true,route:'iv'},
+            {stage:'HD',value:'500–1000mg 透析後',adjusted:true,route:'iv'}]},
+,
+    {name:'Cefadroxil',class:'1st-gen Cephalosporin（口服）',tier:'alt',tierLabel:'替代 (輕症UTI/SSTI PO)',po:true,qtc:false,
+     coverage:['E. coli','Klebsiella pneumoniae','Proteus mirabilis','MSSA','Streptococcus spp.'],
+     doses:[{stage:'eGFR ≥ 25',value:'500–1000mg Q12h PO',note:'1st-gen Cephalosporin口服；腸道吸收佳',route:'po'},
+            {stage:'eGFR 10–24',value:'500mg Q24h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 10 / HD',value:'500mg Q36–48h PO',adjusted:true,route:'po'}]},
+    {name:'Penicillin VK',class:'Natural Penicillin（口服）',tier:'alt',tierLabel:'替代 (Strep咽喉炎/SSTI)',po:true,qtc:false,
+     coverage:['Streptococcus pyogenes (GAS)','Streptococcus pneumoniae','Viridans Streptococci'],
+     doses:[{stage:'eGFR ≥ 10',value:'500mg Q6h PO × 10天',note:'A型鏈球菌感染首選口服；肝臟代謝',route:'po'},
+            {stage:'eGFR < 10',value:'250mg Q6h PO',adjusted:true,route:'po'}]}
+  ]},
+
+  pneumonia:{title:'肺炎 (Pneumonia)',note:'CAP=社區型；HAP=住院48h後；VAP=呼吸器相關。HAP/VAP需覆蓋Pseudomonas。MRSA風險：近期流感、空洞性病變、IVDU。',drugs:[
+    {name:'Ceftriaxone',class:'3rd-gen Cephalosporin',tier:'first',tierLabel:'首選 (CAP IV)',po:false,qtc:false,
+     coverage:['Streptococcus pneumoniae','Haemophilus influenzae','Moraxella catarrhalis','Klebsiella pneumoniae'],
+     doses:[{stage:'任何腎功能',value:'1–2g Q24h IV',note:'肝臟代謝，無需腎調整',route:'iv'}]},
+    {name:'Amoxicillin-Clavulanate',class:'Aminopenicillin / BLI（口服降階）',tier:'first',tierLabel:'首選 (CAP PO降階)',po:true,qtc:false,
+     coverage:['Streptococcus pneumoniae','Haemophilus influenzae','Moraxella catarrhalis','MSSA'],
+     doses:[{stage:'eGFR ≥ 30',value:'875/125mg Q12h PO 或 500/125mg Q8h PO',note:'CAP口服首選；腸道耐受性差可改Q12h',route:'po'},
+            {stage:'eGFR 10–29',value:'500/125mg Q12h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 10 / HD',value:'500/125mg Q24h PO',adjusted:true,route:'po'}]},
+    {name:'Amoxicillin',class:'Aminopenicillin（口服）',tier:'first',tierLabel:'首選 (輕症CAP PO)',po:true,qtc:false,
+     coverage:['Streptococcus pneumoniae','H. influenzae (MSSA)','Streptococcus pyogenes'],
+     doses:[{stage:'eGFR ≥ 30',value:'500mg–1g Q8h PO',note:'輕症CAP門診首選',route:'po'},
+            {stage:'eGFR 10–29',value:'500mg Q12h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 10 / HD',value:'500mg Q24h PO',adjusted:true,route:'po'}]},
+    {name:'Cefuroxime',class:'2nd-gen Cephalosporin',tier:'alt',tierLabel:'替代 (CAP PO降階)',po:true,qtc:false,
+     coverage:['Streptococcus pneumoniae','H. influenzae','Moraxella catarrhalis','MSSA'],
+     doses:[{stage:'eGFR ≥ 30',value:'500mg Q12h PO / 750mg Q8h IV',route:'both'},
+            {stage:'eGFR 10–29',value:'250–500mg Q12h PO',adjusted:true,route:'both'},
+            {stage:'eGFR < 10 / HD',value:'250mg Q12h PO',adjusted:true,route:'both'}]},
+    {name:'Azithromycin',class:'Macrolide',tier:'first',tierLabel:'合用 (Atypical)',po:true,qtc:true,
+     coverage:['Mycoplasma pneumoniae','Legionella pneumophila','Chlamydophila pneumoniae'],
+     doses:[{stage:'任何腎功能',value:'500mg Q24h IV/PO × 3–5天',note:'肝臟代謝，腎功能不影響',route:'both'}]},
+    {name:'Levofloxacin',class:'Fluoroquinolone (Respiratory)',tier:'alt',tierLabel:'替代 (CAP Monotherapy)',po:true,qtc:true,
+     coverage:['Streptococcus pneumoniae','Mycoplasma pneumoniae','Legionella pneumophila','Haemophilus influenzae'],
+     doses:[{stage:'eGFR ≥ 50',value:'750mg Q24h IV/PO',route:'both'},
+            {stage:'eGFR 20–49',value:'750mg loading → 500mg Q24h',adjusted:true,route:'both'},
+            {stage:'eGFR 10–19',value:'750mg loading → 250mg Q24h',adjusted:true,route:'both'},
+            {stage:'eGFR < 10 / HD',value:'500mg loading → 250mg Q48h',adjusted:true,route:'both'}]},
+    {name:'Moxifloxacin',class:'Fluoroquinolone (4th gen, Respiratory)',tier:'alt',tierLabel:'替代 (CAP/嚴重Atypical)',po:true,qtc:true,
+     coverage:['Streptococcus pneumoniae','Mycoplasma pneumoniae','Legionella pneumophila','Bacteroides fragilis'],
+     doses:[{stage:'任何腎功能',value:'400mg Q24h IV/PO',note:'肝臟代謝，腎功能不需調整；不覆蓋Pseudomonas',route:'both'}]},
+    {name:'Doxycycline',class:'Tetracycline',tier:'alt',tierLabel:'替代 (CAP Atypical PO)',po:true,qtc:false,
+     coverage:['Mycoplasma pneumoniae','Chlamydophila pneumoniae','Legionella (部分)','MSSA'],
+     doses:[{stage:'任何腎功能',value:'100mg Q12h PO/IV',note:'肝臟代謝，腎功能不需調整',route:'both'}]},
+    {name:'Piperacillin-Tazobactam',class:'Beta-lactam / BLI',tier:'alt',tierLabel:'替代 (HAP/VAP)',po:false,qtc:false,
+     coverage:['Pseudomonas aeruginosa','Klebsiella pneumoniae','MSSA','Bacteroides fragilis'],
+     doses:[{stage:'eGFR ≥ 40',value:'4.5g Q6h IV（或 3.375g Q4h）',route:'iv'},
+            {stage:'eGFR 20–39',value:'2.25g Q6h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 20 / HD',value:'2.25g Q8h IV',adjusted:true,route:'iv'}]},
+    {name:'Vancomycin',class:'Glycopeptide',tier:'alt',tierLabel:'加疊 (MRSA-HAP/VAP)',po:false,qtc:false,
+     coverage:['MRSA','VISA'],
+     doses:[{stage:'eGFR ≥ 50',value:'15–20 mg/kg Q8–12h IV',route:'iv'},
+            {stage:'eGFR 20–49',value:'15–20 mg/kg Q12–24h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 20',value:'依AUC/TDM調整',adjusted:true,route:'iv'},
+            {stage:'HD',value:'15–20 mg/kg 透析後',adjusted:true,route:'iv'}]},
+    {name:'Linezolid',class:'Oxazolidinone',tier:'alt',tierLabel:'替代 (MRSA肺炎優選)',po:true,qtc:false,
+     coverage:['MRSA','VRE','Streptococcus pneumoniae'],
+     doses:[{stage:'任何腎功能',value:'600mg Q12h IV/PO',note:'肺組織濃度優於Vancomycin；>2週監測骨髓抑制',route:'both'}]},
+    {name:'Cefepime',class:'4th-gen Cephalosporin',tier:'reserve',tierLabel:'保留 (HAP/VAP Pseudomonas)',po:false,qtc:false,
+     coverage:['Pseudomonas aeruginosa','Klebsiella pneumoniae','Enterobacter spp.','MSSA'],
+     doses:[{stage:'eGFR ≥ 50',value:'1–2g Q8h IV',route:'iv'},
+            {stage:'eGFR 30–49',value:'1g Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 11–29',value:'500mg Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR ≤ 10 / HD',value:'250mg Q12h IV',adjusted:true,route:'iv'}]},
+    {name:'Ceftazidime-Avibactam',class:'3rd-gen Cephalosporin + BLI',tier:'reserve',tierLabel:'保留 (KPC/CRE)',po:false,qtc:false,
+     coverage:['KPC-producing CRE','ESBL producers','OXA-48','MDR Pseudomonas aeruginosa'],
+     doses:[{stage:'eGFR ≥ 51',value:'2.5g Q8h IV（延長輸注2h）',route:'iv'},
+            {stage:'eGFR 31–50',value:'1.25g Q8h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 16–30',value:'0.94g Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR ≤ 15 / HD',value:'0.94g Q24h IV',adjusted:true,route:'iv'}]},
+    {name:'Ceftolozane-Tazobactam',class:'5th-gen Cephalosporin + BLI',tier:'reserve',tierLabel:'保留 (MDR Pseudomonas)',po:false,qtc:false,
+     coverage:['MDR Pseudomonas aeruginosa','部分ESBL'],
+     doses:[{stage:'eGFR ≥ 50',value:'1.5g Q8h IV（延長輸注1h）',route:'iv'},
+            {stage:'eGFR 30–49',value:'750mg Q8h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 15–29',value:'375mg Q8h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 15 / HD',value:'150mg Q8h IV',adjusted:true,route:'iv'}]},
+    {name:'Meropenem',class:'Carbapenem',tier:'reserve',tierLabel:'保留 (HAP/VAP MDR)',po:false,qtc:false,
+     coverage:['ESBL producers','Pseudomonas aeruginosa','Acinetobacter baumannii'],
+     doses:[{stage:'eGFR ≥ 50',value:'1–2g Q8h IV（延長輸注3h提升PK/PD）',route:'iv'},
+            {stage:'eGFR 25–49',value:'1g Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 10–24',value:'500mg Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 10 / HD',value:'500mg Q24h IV',adjusted:true,route:'iv'}]},
+    {name:'Colistin',class:'Polymyxin',tier:'last',tierLabel:'最後武器 (XDR Acinetobacter)',po:false,qtc:false,
+     coverage:['XDR Acinetobacter baumannii','Carbapenem-resistant Pseudomonas','CRE'],
+     doses:[{stage:'eGFR ≥ 80',value:'Loading 9 MIU → 4.5 MIU Q12h IV',note:'腎毒性高，密切監測Cr',route:'iv'},
+            {stage:'eGFR 50–79',value:'Loading 9 MIU → 3.35 MIU Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 30–49',value:'Loading 9 MIU → 2.5 MIU Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 30 / HD',value:'請藥師協助計算劑量',adjusted:true,route:'iv'}]},
+    {name:'Cefuroxime',class:'2nd-gen Cephalosporin（CAP PO降階）',tier:'alt',tierLabel:'替代 (CAP輕症PO)',po:true,qtc:false,
+     coverage:['Streptococcus pneumoniae','Haemophilus influenzae','Moraxella catarrhalis','MSSA'],
+     doses:[{stage:'eGFR ≥ 30',value:'500mg Q12h PO',note:'CAP輕症口服選項；比Amox-Clav窄，敏感時優先',route:'po'},
+            {stage:'eGFR 10–29',value:'250–500mg Q12h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 10 / HD',value:'250mg Q24h PO',adjusted:true,route:'po'}]},
+    {name:'Cefpodoxime',class:'3rd-gen Cephalosporin（口服）',tier:'alt',tierLabel:'替代 (CAP PO)',po:true,qtc:false,
+     coverage:['Streptococcus pneumoniae','Haemophilus influenzae','Moraxella catarrhalis','E. coli'],
+     doses:[{stage:'eGFR ≥ 30',value:'200mg Q12h PO',route:'po'},
+            {stage:'eGFR 10–29',value:'200mg Q24h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 10 / HD',value:'200mg Q48–72h PO',adjusted:true,route:'po'}]},
+,
+    {name:'Cefepime',class:'4th-gen Cephalosporin（抗Pseudomonas）',tier:'alt',tierLabel:'替代 (HAP/VAP Pseudomonas)',po:false,qtc:false,
+     coverage:['Pseudomonas aeruginosa','Enterobacter spp.','Klebsiella pneumoniae','E. coli','Streptococcus pneumoniae'],
+     doses:[{stage:'eGFR ≥ 60',value:'1–2g Q8–12h IV',note:'第4代Cephalosporin；Pseudomonas覆蓋佳；比Pip-Tazo腎毒性低',route:'iv'},
+            {stage:'eGFR 30–59',value:'2g Q12h IV 或 1g Q8h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 11–29',value:'2g Q24h IV 或 500mg Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR ≤ 10 / HD',value:'500mg Q24h IV（透析後補充）',adjusted:true,route:'iv'}]},
+    {name:'Imipenem-Cilastatin',class:'Carbapenem（廣效）',tier:'reserve',tierLabel:'保留 (HAP/VAP MDR，非CNS)',po:false,qtc:false,
+     coverage:['ESBL producers','Pseudomonas aeruginosa','Acinetobacter baumannii','Enterococcus faecalis'],
+     doses:[{stage:'eGFR ≥ 70',value:'500mg Q6h IV 或 1g Q8h IV',note:'⚠️ CNS感染禁用（降低癲癇閾值，用Meropenem代替）',route:'iv'},
+            {stage:'eGFR 40–69',value:'500mg Q6–8h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 20–39',value:'500mg Q8–12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 20 / HD',value:'250–500mg Q12h IV',adjusted:true,route:'iv'}]},
+    {name:'Erythromycin',class:'Macrolide（老一代）',tier:'alt',tierLabel:'替代 (Atypical/Legionella PO)',po:true,qtc:true,
+     coverage:['Mycoplasma pneumoniae','Legionella pneumophila','Chlamydophila pneumoniae'],
+     doses:[{stage:'任何腎功能',value:'500mg Q6h PO 或 1g Q6h IV（嚴重）',note:'肝臟代謝；副作用多（噁心）；QTc風險；現多被Azithromycin取代',route:'both'}]}
+  ]},
+
+  intraabdominal:{title:'腹腔感染 (Intra-abdominal)',note:'需外科source control（引流/手術）。術後/院內感染需考慮Enterococcus及Candida。',drugs:[
+    {name:'Amoxicillin-Clavulanate',class:'Aminopenicillin / BLI（口服降階）',tier:'first',tierLabel:'首選 (Mild PO降階)',po:true,qtc:false,
+     coverage:['E. coli','Klebsiella pneumoniae','Bacteroides fragilis','Enterococcus faecalis'],
+     doses:[{stage:'eGFR ≥ 30',value:'875/125mg Q12h PO',note:'Mild IAI口服降階',route:'po'},
+            {stage:'eGFR 10–29',value:'500/125mg Q12h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 10 / HD',value:'500/125mg Q24h PO',adjusted:true,route:'po'}]},
+    {name:'Cefazolin + Metronidazole',class:'1st-gen Cephalosporin + Nitroimidazole',tier:'first',tierLabel:'首選 (Mild-moderate IV)',po:false,qtc:false,
+     coverage:['E. coli','Klebsiella pneumoniae','Bacteroides fragilis','Clostridium spp.'],
+     doses:[{stage:'eGFR ≥ 35',value:'Cefazolin 1–2g Q8h + Metro 500mg Q8h IV',route:'iv'},
+            {stage:'eGFR 11–34',value:'Cefazolin 1g Q12h + Metro 500mg Q8h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR ≤ 10 / HD',value:'Cefazolin 500mg Q24h + Metro 500mg Q8h',adjusted:true,note:'Metronidazole無需腎調整',route:'iv'}]},
+    {name:'Metronidazole',class:'Nitroimidazole（口服降階）',tier:'alt',tierLabel:'替代 (Anaerobe PO)',po:true,qtc:false,
+     coverage:['Bacteroides fragilis','Clostridium spp.','C. difficile (腸道)','Fusobacterium'],
+     doses:[{stage:'任何腎功能',value:'500mg Q8h PO（或 400mg Q8h）',note:'肝臟代謝，腎功能不需調整；酒精禁忌',route:'po'}]},
+    {name:'Ertapenem',class:'Carbapenem Group 1',tier:'alt',tierLabel:'替代 (ESBL懷疑)',po:false,qtc:false,
+     coverage:['ESBL-producing E. coli','ESBL-producing Klebsiella','Bacteroides fragilis'],
+     doses:[{stage:'eGFR ≥ 30',value:'1g Q24h IV',route:'iv'},
+            {stage:'eGFR < 30 / HD',value:'500mg Q24h IV',adjusted:true,note:'不覆蓋Pseudomonas',route:'iv'}]},
+    {name:'Piperacillin-Tazobactam',class:'Beta-lactam / BLI',tier:'alt',tierLabel:'替代 (Moderate-severe)',po:false,qtc:false,
+     coverage:['Pseudomonas aeruginosa','Enterococcus faecalis','Bacteroides fragilis','E. coli'],
+     doses:[{stage:'eGFR ≥ 40',value:'3.375–4.5g Q6h IV',route:'iv'},
+            {stage:'eGFR 20–39',value:'2.25g Q6h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 20 / HD',value:'2.25g Q8h IV（透析後補充）',adjusted:true,route:'iv'}]},
+    {name:'Ciprofloxacin + Metronidazole',class:'Fluoroquinolone + Nitroimidazole（全口服）',tier:'alt',tierLabel:'替代 (Mild PO全口服)',po:true,qtc:true,
+     coverage:['E. coli','Klebsiella pneumoniae','Bacteroides fragilis','Pseudomonas (Cipro)'],
+     doses:[{stage:'eGFR ≥ 30',value:'Cipro 500mg Q12h + Metro 500mg Q8h PO',note:'IAI輕症全口服方案',route:'po'},
+            {stage:'eGFR 10–29',value:'Cipro 250–500mg Q24h + Metro 500mg Q8h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 10 / HD',value:'Cipro 250mg Q24h + Metro 500mg Q8h PO',adjusted:true,route:'po'}]},
+    {name:'Tigecycline',class:'Glycylcycline（廣效）',tier:'reserve',tierLabel:'保留 (MDR)',po:false,qtc:false,
+     coverage:['ESBL producers','CRE (部分)','Bacteroides fragilis','MRSA','Acinetobacter baumannii'],
+     doses:[{stage:'任何腎功能',value:'100mg loading → 50mg Q12h IV',note:'腎功能不需調整；AUC低避免菌血症單藥',route:'iv'}]},
+    {name:'Cefepime + Metronidazole',class:'4th-gen Cephalosporin + Nitroimidazole',tier:'alt',tierLabel:'替代 (Pseudomonas風險)',po:false,qtc:false,
+     coverage:['Pseudomonas aeruginosa','E. coli','Klebsiella pneumoniae','Bacteroides fragilis'],
+     doses:[{stage:'eGFR ≥ 50',value:'Cefepime 2g Q8h + Metro 500mg Q8h IV',route:'iv'},
+            {stage:'eGFR 30–49',value:'Cefepime 1g Q12h + Metro 500mg Q8h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 11–29',value:'Cefepime 500mg Q12h + Metro 500mg Q8h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR ≤ 10 / HD',value:'Cefepime 250mg Q12h + Metro 500mg Q8h IV',adjusted:true,route:'iv'}]},
+    {name:'Meropenem',class:'Carbapenem',tier:'reserve',tierLabel:'保留 (Severe/ESBL/MDR)',po:false,qtc:false,
+     coverage:['ESBL producers','Pseudomonas aeruginosa','Bacteroides fragilis','Acinetobacter baumannii'],
+     doses:[{stage:'eGFR ≥ 50',value:'1g Q8h IV',route:'iv'},
+            {stage:'eGFR 25–49',value:'1g Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 10–24',value:'500mg Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 10 / HD',value:'500mg Q24h IV',adjusted:true,route:'iv'}]},
+    {name:'Micafungin',class:'Echinocandin (Antifungal)',tier:'reserve',tierLabel:'加疊 (Candida腹膜炎)',po:false,qtc:false,
+     coverage:['Candida albicans','Candida glabrata','Candida parapsilosis (部分)'],
+     doses:[{stage:'任何腎功能',value:'100–150mg Q24h IV',note:'Candida高風險：TPN、反覆穿孔、免疫抑制',route:'iv'}]},
+    {name:'Fluconazole',class:'Triazole Antifungal（口服降階）',tier:'reserve',tierLabel:'保留 (Candida PO降階)',po:true,qtc:true,
+     coverage:['Candida albicans','Candida tropicalis'],
+     doses:[{stage:'eGFR ≥ 50',value:'400mg loading → 200–400mg Q24h PO/IV',note:'確認Candida albicans敏感後降階',route:'both'},
+            {stage:'eGFR 25–49',value:'400mg loading → 100–200mg Q24h',adjusted:true,route:'both'},
+            {stage:'eGFR < 25 / HD',value:'依腎功能減半，HD後補充',adjusted:true,route:'both'}]},
+  ]},
+
+  ssti:{title:'皮膚軟組織感染 (SSTI)',note:'Non-purulent（Cellulitis）= Strep主；Purulent（Abscess）= S.aureus主。NF需緊急清創。',drugs:[
+    {name:'Cephalexin',class:'1st-gen Cephalosporin（口服）',tier:'first',tierLabel:'首選 (輕症Cellulitis PO)',po:true,qtc:false,
+     coverage:['MSSA','Streptococcus pyogenes (GAS)','Streptococcus agalactiae (GBS)'],
+     doses:[{stage:'eGFR ≥ 35',value:'500mg Q6h PO',route:'po'},
+            {stage:'eGFR 11–34',value:'250–500mg Q8–12h PO',adjusted:true,route:'po'},
+            {stage:'eGFR ≤ 10 / HD',value:'250mg Q12–24h PO',adjusted:true,route:'po'}]},
+    {name:'Cefazolin',class:'1st-gen Cephalosporin (IV)',tier:'first',tierLabel:'首選 (中-重度 IV)',po:false,qtc:false,
+     coverage:['MSSA','Streptococcus pyogenes (GAS)','Streptococcus agalactiae (GBS)'],
+     doses:[{stage:'eGFR ≥ 35',value:'1–2g Q8h IV',route:'iv'},
+            {stage:'eGFR 11–34',value:'1g Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR ≤ 10 / HD',value:'500mg Q24h IV',adjusted:true,route:'iv'}]},
+    {name:'Amoxicillin-Clavulanate',class:'Aminopenicillin / BLI',tier:'first',tierLabel:'首選 (Mild/Diabetic foot PO)',po:true,qtc:false,
+     coverage:['MSSA','Streptococcus spp.','E. coli (糖尿病足)','Bacteroides fragilis'],
+     doses:[{stage:'eGFR ≥ 30',value:'875/125mg Q12h PO',route:'po'},
+            {stage:'eGFR 10–29',value:'500/125mg Q12h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 10 / HD',value:'500/125mg Q24h PO',adjusted:true,route:'po'}]},
+    {name:'Oxacillin',class:'Anti-staphylococcal Penicillin (IV)',tier:'first',tierLabel:'首選 (MSSA confirmed IV)',po:false,qtc:false,
+     coverage:['MSSA','Streptococcus pyogenes (GAS)'],
+     doses:[{stage:'eGFR ≥ 10',value:'1–2g Q4–6h IV',note:'肝臟代謝，腎功能影響小',route:'iv'},
+            {stage:'eGFR < 10',value:'1g Q6h IV',adjusted:true,route:'iv'}]},
+    {name:'Dicloxacillin',class:'Anti-staphylococcal Penicillin (PO)',tier:'first',tierLabel:'首選 (MSSA PO降階)',po:true,qtc:false,
+     coverage:['MSSA','Streptococcus pyogenes (GAS)'],
+     doses:[{stage:'任何腎功能',value:'500mg Q6h PO（空腹服用）',note:'肝臟代謝，腎功能不需調整；需空腹30分鐘前服用',route:'po'}]},
+    {name:'Penicillin VK',class:'Natural Penicillin（口服）',tier:'first',tierLabel:'首選 (Strep感染 PO)',po:true,qtc:false,
+     coverage:['Streptococcus pyogenes (GAS)','Streptococcus agalactiae (GBS)','S. pneumoniae（敏感）'],
+     doses:[{stage:'eGFR ≥ 10',value:'500mg Q6h PO × 10天',note:'純Strep感染（GAS咽喉炎、蜂窩織炎）首選',route:'po'},
+            {stage:'eGFR < 10',value:'250mg Q6h PO',adjusted:true,route:'po'}]},
+    {name:'Cefuroxime',class:'2nd-gen Cephalosporin（PO降階）',tier:'alt',tierLabel:'替代 (MSSA/Strep PO)',po:true,qtc:false,
+     coverage:['MSSA','Streptococcus pyogenes (GAS)','Streptococcus agalactiae (GBS)'],
+     doses:[{stage:'eGFR ≥ 30',value:'500mg Q12h PO',note:'Cephalexin無效時的替代',route:'po'},
+            {stage:'eGFR 10–29',value:'250mg Q12h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 10 / HD',value:'250mg Q24h PO',adjusted:true,route:'po'}]},
+    {name:'Cloxacillin',class:'Anti-staphylococcal Penicillin',tier:'first',tierLabel:'首選 (MSSA confirmed)',po:false,qtc:false,
+     coverage:['MSSA','Streptococcus pyogenes (GAS)'],
+     doses:[{stage:'eGFR ≥ 10',value:'1–2g Q4–6h IV',note:'肝臟代謝為主',route:'iv'},
+            {stage:'eGFR < 10',value:'1g Q6h IV',adjusted:true,route:'iv'}]},
+    {name:'TMP-SMX',class:'Folate antagonist (PO MRSA)',tier:'alt',tierLabel:'替代 (輕症MRSA PO)',po:true,qtc:false,
+     coverage:['MRSA (CA-MRSA)','MSSA','Streptococcus (不穩定)'],
+     doses:[{stage:'eGFR ≥ 30',value:'DS (160/800mg) Q12h PO × 5–7天',note:'CA-MRSA輕症cellulitis PO首選',route:'po'},
+            {stage:'eGFR 15–29',value:'DS Q24h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 15 / HD',value:'避免使用',adjusted:true,route:'po'}]},
+    {name:'Doxycycline',class:'Tetracycline',tier:'alt',tierLabel:'替代 (CA-MRSA/輕症PO)',po:true,qtc:false,
+     coverage:['MRSA (CA-MRSA)','MSSA','Atypical'],
+     doses:[{stage:'任何腎功能',value:'100mg Q12h PO',note:'腎功能不需調整；避免與牛奶/制酸劑同服',route:'po'}]},
+    {name:'Vancomycin',class:'Glycopeptide',tier:'alt',tierLabel:'替代 (MRSA懷疑 IV)',po:false,qtc:false,
+     coverage:['MRSA','VISA','Streptococcus spp.'],
+     doses:[{stage:'eGFR ≥ 50',value:'15–20 mg/kg Q8–12h IV',note:'AUC 400–600',route:'iv'},
+            {stage:'eGFR 20–49',value:'15–20 mg/kg Q12–24h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 20',value:'依AUC/trough調整',adjusted:true,route:'iv'},
+            {stage:'HD',value:'500–1000mg 透析後',adjusted:true,route:'iv'}]},
+    {name:'Daptomycin',class:'Lipopeptide',tier:'alt',tierLabel:'替代 (MRSA/VRE 非肺)',po:false,qtc:false,
+     coverage:['MRSA','VRE','Enterococcus faecium'],
+     doses:[{stage:'eGFR ≥ 30',value:'4–6 mg/kg Q24h IV',note:'⚠️ 肺炎禁用；監測CK每週',route:'iv'},
+            {stage:'eGFR < 30 / HD',value:'4–6 mg/kg Q48h IV（HD後）',adjusted:true,route:'iv'}]},
+    {name:'Linezolid',class:'Oxazolidinone',tier:'alt',tierLabel:'替代 (MRSA PO降階)',po:true,qtc:false,
+     coverage:['MRSA','VRE','Streptococcus spp.'],
+     doses:[{stage:'任何腎功能',value:'600mg Q12h IV/PO',note:'無需腎調整；>14天監測骨髓抑制',route:'both'}]},
+    {name:'Clindamycin',class:'Lincosamide',tier:'alt',tierLabel:'替代 (MSSA/Strep PO)',po:true,qtc:false,
+     coverage:['MSSA','CA-MRSA (需確認D-zone)','Streptococcus pyogenes (GAS)','Bacteroides fragilis'],
+     doses:[{stage:'任何腎功能',value:'300–450mg Q6–8h PO / 600–900mg Q8h IV',note:'口服生體利用率高；注意C.diff風險',route:'both'}]},
+    {name:'Ceftaroline',class:'5th-gen Cephalosporin（抗MRSA活性）',tier:'reserve',tierLabel:'保留 (MRSA SSTI/CAP)',po:false,qtc:false,
+     coverage:['MRSA','MSSA','Streptococcus pneumoniae','Gram(+)'],
+     doses:[{stage:'eGFR ≥ 50',value:'600mg Q12h IV（輸注1h）',route:'iv'},
+            {stage:'eGFR 31–50',value:'400mg Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 15–30',value:'300mg Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 15 / HD',value:'200mg Q12h IV（HD後）',adjusted:true,route:'iv'}]},
+    {name:'Pip-Tazo + Vancomycin',class:'Beta-lactam/BLI + Glycopeptide',tier:'reserve',tierLabel:'保留 (Necrotizing Fasciitis)',po:false,qtc:false,
+     coverage:['Streptococcus pyogenes (GAS)','Clostridium perfringens','Bacteroides fragilis','Polymicrobial'],
+     doses:[{stage:'eGFR ≥ 40',value:'Pip-Tazo 4.5g Q6h + Vanco 15–20 mg/kg Q8h IV',note:'需緊急手術清創！',route:'iv'},
+            {stage:'eGFR 20–39',value:'Pip-Tazo 2.25g Q6h + Vanco 調整',adjusted:true,route:'iv'},
+            {stage:'eGFR < 20 / HD',value:'Pip-Tazo 2.25g Q8h + Vanco 依TDM',adjusted:true,route:'iv'}]},,
+    {name:'Cefdinir',class:'3rd-gen Cephalosporin（口服）',tier:'alt',tierLabel:'替代 (輕症SSTI PO)',po:true,qtc:false,
+     coverage:['MSSA','Streptococcus pyogenes (GAS)','H. influenzae','Moraxella catarrhalis'],
+     doses:[{stage:'eGFR ≥ 30',value:'300mg Q12h 或 600mg Q24h PO',route:'po'},
+            {stage:'eGFR < 30 / HD',value:'300mg Q24h PO（HD後補充）',adjusted:true,route:'po'}]}
+,
+    {name:'Ceftaroline',class:'5th-gen Cephalosporin（抗MRSA）',tier:'alt',tierLabel:'替代 (MRSA SSTI/CAP)',po:false,qtc:false,
+     coverage:['MRSA','MSSA','Streptococcus pyogenes (GAS)','Streptococcus pneumoniae'],
+     doses:[{stage:'eGFR ≥ 50',value:'600mg Q12h IV（延長輸注1h）',note:'唯一對MRSA有效的Cephalosporin；FDA核准SSTI及CAP',route:'iv'},
+            {stage:'eGFR 30–49',value:'400mg Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 15–29',value:'300mg Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 15 / HD',value:'200mg Q12h IV（透析後補充）',adjusted:true,route:'iv'}]},
+    {name:'Penicillin VK',class:'Natural Penicillin（口服）',tier:'first',tierLabel:'首選 (Strep咽喉炎/輕症蜂窩組織炎)',po:true,qtc:false,
+     coverage:['Streptococcus pyogenes (GAS)','Streptococcus agalactiae (GBS)','Viridans Streptococci'],
+     doses:[{stage:'eGFR ≥ 10',value:'500mg Q6h PO × 10天',note:'Strep GAS首選口服；比Amoxicillin窄效',route:'po'},
+            {stage:'eGFR < 10',value:'250mg Q6h PO',adjusted:true,route:'po'}]},
+    {name:'Cefadroxil',class:'1st-gen Cephalosporin（口服）',tier:'first',tierLabel:'首選 (輕症SSTI PO)',po:true,qtc:false,
+     coverage:['MSSA','Streptococcus pyogenes (GAS)','Streptococcus agalactiae (GBS)'],
+     doses:[{stage:'eGFR ≥ 25',value:'500–1000mg Q12h PO',note:'1st-gen Cephalosporin口服；腸道吸收佳',route:'po'},
+            {stage:'eGFR 10–24',value:'500mg Q24h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 10 / HD',value:'500mg Q36–48h PO',adjusted:true,route:'po'}]}
+  ]},
+
+  bacteremia:{title:'菌血症 (Bacteremia / BSI)',note:'S.aureus BSI：強烈建議TEE排除IE，療程至少14天。培養陽性後48–72h依菌種de-escalate。Candida BSI需眼科會診。',drugs:[
+    {name:'Ceftriaxone',class:'3rd-gen Cephalosporin',tier:'first',tierLabel:'首選 (Gram-neg BSI)',po:false,qtc:false,
+     coverage:['E. coli','Klebsiella pneumoniae','Proteus mirabilis','Streptococcus spp.'],
+     doses:[{stage:'任何腎功能',value:'2g Q24h IV',note:'肝臟代謝，無需腎調整',route:'iv'}]},
+    {name:'Cefazolin',class:'1st-gen Cephalosporin',tier:'first',tierLabel:'首選 (MSSA BSI 降階)',po:false,qtc:false,
+     coverage:['MSSA','Streptococcus spp.'],
+     doses:[{stage:'eGFR ≥ 35',value:'2g Q8h IV',note:'優於Cloxacillin腎毒性，適合降階',route:'iv'},
+            {stage:'eGFR 11–34',value:'1–2g Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR ≤ 10 / HD',value:'500mg–1g Q12–24h IV',adjusted:true,route:'iv'}]},
+    {name:'Vancomycin',class:'Glycopeptide',tier:'first',tierLabel:'首選 (MRSA BSI)',po:false,qtc:false,
+     coverage:['MRSA','CoNS (凝固酶陰性葡萄球菌)','Enterococcus faecalis'],
+     doses:[{stage:'eGFR ≥ 50',value:'15–20 mg/kg Q8–12h IV',note:'AUC 400–600；需TEE排除IE',route:'iv'},
+            {stage:'eGFR 20–49',value:'15–20 mg/kg Q12–24h IV',adjusted:true,note:'TDM每日監測Cr',route:'iv'},
+            {stage:'eGFR < 20',value:'依AUC調整頻率',adjusted:true,route:'iv'},
+            {stage:'HD',value:'15–20 mg/kg 透析後（trough 10–15）',adjusted:true,route:'iv'}]},
+    {name:'Oxacillin',class:'Anti-staphylococcal Penicillin (IV)',tier:'first',tierLabel:'首選 (MSSA BSI 強效)',po:false,qtc:false,
+     coverage:['MSSA','Streptococcus spp.'],
+     doses:[{stage:'eGFR ≥ 10',value:'2g Q4h IV',note:'MSSA BSI 最強效選擇；肝臟代謝為主',route:'iv'},
+            {stage:'eGFR < 10',value:'1.5g Q4h IV',adjusted:true,route:'iv'}]},
+    {name:'Cefepime',class:'4th-gen Cephalosporin',tier:'alt',tierLabel:'替代 (Pseudomonas/Enterobacter BSI)',po:false,qtc:false,
+     coverage:['Pseudomonas aeruginosa','Enterobacter spp.','Klebsiella pneumoniae','E. coli'],
+     doses:[{stage:'eGFR ≥ 50',value:'2g Q8h IV',route:'iv'},
+            {stage:'eGFR 30–49',value:'1g Q8h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 11–29',value:'1g Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR ≤ 10 / HD',value:'500mg Q12h IV',adjusted:true,route:'iv'}]},
+    {name:'Daptomycin',class:'Lipopeptide',tier:'alt',tierLabel:'替代 (MRSA/VRE BSI)',po:false,qtc:false,
+     coverage:['MRSA','VRE (E. faecium)','Enterococcus spp.'],
+     doses:[{stage:'eGFR ≥ 30',value:'6–10 mg/kg Q24h IV',note:'BSI需較高劑量；監測CK；肺炎禁用',route:'iv'},
+            {stage:'eGFR < 30 / HD',value:'6–10 mg/kg Q48h IV（HD後）',adjusted:true,route:'iv'}]},
+    {name:'Ampicillin',class:'Aminopenicillin',tier:'alt',tierLabel:'替代 (E. faecalis BSI)',po:false,qtc:false,
+     coverage:['Enterococcus faecalis','Listeria monocytogenes','GBS'],
+     doses:[{stage:'eGFR ≥ 30',value:'2g Q4–6h IV',note:'E.faecalis首選；可搭Ceftriaxone synergy',route:'iv'},
+            {stage:'eGFR 15–29',value:'1.5g Q6h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 15 / HD',value:'1g Q8–12h IV',adjusted:true,route:'iv'}]},
+    {name:'Micafungin',class:'Echinocandin',tier:'reserve',tierLabel:'保留 (Candidemia)',po:false,qtc:false,
+     coverage:['Candida albicans','Candida glabrata','Candida tropicalis'],
+     doses:[{stage:'任何腎功能',value:'Micafungin 100mg Q24h IV\n或 Caspofungin 70mg → 50mg Q24h IV',note:'Candidemia首選；需眼科會診',route:'iv'}]},
+    {name:'Fluconazole',class:'Triazole（降階）',tier:'reserve',tierLabel:'保留 (Candidemia PO降階)',po:true,qtc:true,
+     coverage:['Candida albicans','Candida tropicalis'],
+     doses:[{stage:'eGFR ≥ 50',value:'400–800mg loading → 400mg Q24h PO/IV',note:'僅限確認Fluconazole敏感後降階',route:'both'},
+            {stage:'eGFR 25–49',value:'200–400mg Q24h',adjusted:true,route:'both'},
+            {stage:'eGFR < 25 / HD',value:'100–200mg Q24h（HD後補充）',adjusted:true,route:'both'}]},
+    {name:'Meropenem',class:'Carbapenem',tier:'reserve',tierLabel:'保留 (ESBL/Septic shock)',po:false,qtc:false,
+     coverage:['ESBL producers','CRE (部分)','Pseudomonas aeruginosa','Acinetobacter baumannii'],
+     doses:[{stage:'eGFR ≥ 50',value:'1–2g Q8h IV（延長輸注3h效果佳）',route:'iv'},
+            {stage:'eGFR 25–49',value:'1g Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 10–24',value:'500mg Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 10 / HD',value:'500mg Q24h IV',adjusted:true,route:'iv'}]},
+,
+    {name:'Ceftaroline',class:'5th-gen Cephalosporin（抗MRSA）',tier:'alt',tierLabel:'替代 (MRSA BSI 輔助)',po:false,qtc:false,
+     coverage:['MRSA','MSSA','CoNS'],
+     doses:[{stage:'eGFR ≥ 50',value:'600mg Q8h IV（BSI需更高頻率）',note:'MRSA BSI輔助或Vancomycin失敗時替代；不列為一線',route:'iv'},
+            {stage:'eGFR 30–49',value:'400mg Q8h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 15–29',value:'300mg Q8h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 15 / HD',value:'200mg Q8h IV',adjusted:true,route:'iv'}]},
+    {name:'Gentamicin',class:'Aminoglycoside（Synergy用）',tier:'alt',tierLabel:'加疊 (IE Synergy / Gram-neg)',po:false,qtc:false,
+     coverage:['Enterococcus faecalis (synergy)','Gram-negative BSI','Pseudomonas aeruginosa'],
+     doses:[{stage:'eGFR ≥ 60',value:'3–5 mg/kg Q24h IV（once-daily dosing）',note:'IE synergy：1 mg/kg Q8h×2週；需TDM（peak 5–10, trough <1）；腎/耳毒性',route:'iv'},
+            {stage:'eGFR 40–59',value:'延長間隔：Q36h；依TDM調整',adjusted:true,route:'iv'},
+            {stage:'eGFR < 40 / HD',value:'避免或請藥師協助計算',adjusted:true,note:'腎毒性高，CrCl<40 慎用',route:'iv'}]},
+    {name:'Cefepime',class:'4th-gen Cephalosporin',tier:'alt',tierLabel:'替代 (Gram-neg BSI/Febrile neutropenia)',po:false,qtc:false,
+     coverage:['Pseudomonas aeruginosa','Enterobacter spp.','Klebsiella pneumoniae','E. coli'],
+     doses:[{stage:'eGFR ≥ 60',value:'2g Q8h IV',note:'發燒性嗜中性球減少症經驗性首選之一',route:'iv'},
+            {stage:'eGFR 30–59',value:'2g Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 11–29',value:'2g Q24h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR ≤ 10 / HD',value:'500mg Q24h IV（透析後補充）',adjusted:true,route:'iv'}]}
+  ]},
+
+  hepatobiliary:{title:'肝膽道感染 (Hepatobiliary)',note:'Tokyo Guidelines：Grade I可保守；Grade II/III需緊急膽道引流。菌種：Gram(-)為主，需注意Enterococcus及Anaerobes。',drugs:[
+    {name:'Amoxicillin-Clavulanate',class:'Aminopenicillin / BLI（口服）',tier:'first',tierLabel:'首選 (Grade I PO)',po:true,qtc:false,
+     coverage:['E. coli','Klebsiella pneumoniae','Enterococcus faecalis','Bacteroides fragilis'],
+     doses:[{stage:'eGFR ≥ 30',value:'875/125mg Q12h PO',note:'Grade I輕度膽囊炎出院口服',route:'po'},
+            {stage:'eGFR 10–29',value:'500/125mg Q12h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 10 / HD',value:'500/125mg Q24h PO',adjusted:true,route:'po'}]},
+    {name:'Ceftriaxone + Metronidazole',class:'3rd-gen Cephalosporin + Nitroimidazole',tier:'first',tierLabel:'首選 (Grade I-II IV)',po:false,qtc:false,
+     coverage:['E. coli','Klebsiella pneumoniae','Bacteroides fragilis','Clostridium spp.'],
+     doses:[{stage:'任何腎功能',value:'CTX 2g Q24h + Metro 500mg Q8h IV',note:'Ceftriaxone膽汁排泄高，適合膽道感染',route:'iv'}]},
+    {name:'Ciprofloxacin + Metronidazole',class:'Fluoroquinolone + Nitroimidazole（口服）',tier:'alt',tierLabel:'替代 (Grade I-II PO)',po:true,qtc:true,
+     coverage:['E. coli','Klebsiella pneumoniae','Bacteroides fragilis'],
+     doses:[{stage:'eGFR ≥ 30',value:'Cipro 500mg Q12h + Metro 500mg Q8h PO',route:'po'},
+            {stage:'eGFR 10–29',value:'Cipro 250mg Q24h + Metro 500mg Q8h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 10 / HD',value:'Cipro 250mg Q24h（透析後）+ Metro 500mg Q8h',adjusted:true,route:'po'}]},
+    {name:'Ampicillin-Sulbactam',class:'Beta-lactam / BLI',tier:'alt',tierLabel:'替代 (Enterococcus覆蓋)',po:false,qtc:false,
+     coverage:['Enterococcus faecalis','E. coli','Klebsiella pneumoniae','Bacteroides fragilis'],
+     doses:[{stage:'eGFR ≥ 30',value:'3g Q6h IV',route:'iv'},
+            {stage:'eGFR 15–29',value:'3g Q8–12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 15 / HD',value:'3g Q24h IV',adjusted:true,route:'iv'}]},
+    {name:'Piperacillin-Tazobactam',class:'Beta-lactam / BLI',tier:'alt',tierLabel:'替代 (Grade II-III)',po:false,qtc:false,
+     coverage:['Pseudomonas aeruginosa','Enterococcus faecalis','Bacteroides fragilis','E. coli'],
+     doses:[{stage:'eGFR ≥ 40',value:'4.5g Q6h IV',route:'iv'},
+            {stage:'eGFR 20–39',value:'2.25g Q6h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 20 / HD',value:'2.25g Q8h IV（透析後補充）',adjusted:true,route:'iv'}]},
+    {name:'Meropenem',class:'Carbapenem',tier:'reserve',tierLabel:'保留 (Grade III/ESBL)',po:false,qtc:false,
+     coverage:['ESBL producers','Pseudomonas aeruginosa','Bacteroides fragilis'],
+     doses:[{stage:'eGFR ≥ 50',value:'1g Q8h IV',route:'iv'},
+            {stage:'eGFR 25–49',value:'1g Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 10–24',value:'500mg Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 10 / HD',value:'500mg Q24h IV',adjusted:true,route:'iv'}]},
+    {name:'Micafungin',class:'Echinocandin',tier:'reserve',tierLabel:'保留 (Candida膽道感染)',po:false,qtc:false,
+     coverage:['Candida albicans','Candida glabrata'],
+     doses:[{stage:'任何腎功能',value:'100mg Q24h IV',note:'嚴重肝功能受損需調整',route:'iv'}]},
+  ]},
+
+  cns:{title:'中樞神經系統感染 (CNS)',note:'⚠️ BBB穿透率關鍵！細菌性腦膜炎：抗生素需在30分鐘內給予。Dexamethasone 0.15 mg/kg Q6h×4天（首劑前或同時）可減少神經後遺症。',drugs:[
+    {name:'Ceftriaxone',class:'3rd-gen Cephalosporin（高CSF穿透）',tier:'first',tierLabel:'首選 (細菌性腦膜炎)',po:false,qtc:false,
+     coverage:['Streptococcus pneumoniae','Neisseria meningitidis','Haemophilus influenzae','Listeria monocytogenes (部分)'],
+     doses:[{stage:'任何腎功能',value:'2g Q12h IV（腦膜炎高劑量）',note:'比Q24h更好維持CSF濃度；肝臟代謝無需腎調整',route:'iv'}]},
+    {name:'Ampicillin',class:'Aminopenicillin（Listeria必選）',tier:'first',tierLabel:'加疊 (Listeria覆蓋)',po:false,qtc:false,
+     coverage:['Listeria monocytogenes','Enterococcus faecalis','GBS'],
+     doses:[{stage:'eGFR ≥ 30',value:'2g Q4h IV（腦膜炎劑量）',note:'老年、免疫抑制、孕婦必加此藥',route:'iv'},
+            {stage:'eGFR 15–29',value:'2g Q6h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 15 / HD',value:'1g Q6–8h IV',adjusted:true,route:'iv'}]},
+    {name:'Vancomycin',class:'Glycopeptide（CSF穿透中等）',tier:'first',tierLabel:'加疊 (MRSA/PRSP)',po:false,qtc:false,
+     coverage:['MRSA','PCN-resistant S. pneumoniae (PRSP)','CoNS'],
+     doses:[{stage:'eGFR ≥ 50',value:'15–20 mg/kg Q6–8h IV（腦膜炎需高劑量）',note:'CSF穿透率約7–14%；AUC 400–600',route:'iv'},
+            {stage:'eGFR 20–49',value:'15–20 mg/kg Q8–12h IV',adjusted:true,note:'每日TDM',route:'iv'},
+            {stage:'eGFR < 20',value:'依AUC密切調整',adjusted:true,route:'iv'},
+            {stage:'HD',value:'15–20 mg/kg 透析後',adjusted:true,route:'iv'}]},
+    {name:'Acyclovir',class:'Antiviral - Nucleoside analogue',tier:'alt',tierLabel:'首選 (HSV/VZV腦炎)',po:false,qtc:false,
+     coverage:['HSV-1 / HSV-2','VZV','EBV (部分)'],
+     doses:[{stage:'eGFR ≥ 50',value:'10 mg/kg Q8h IV × 14–21天',note:'懷疑HSV腦炎立即使用；充分水化',route:'iv'},
+            {stage:'eGFR 25–49',value:'10 mg/kg Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 10–24',value:'10 mg/kg Q24h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 10 / HD',value:'5 mg/kg Q24h IV',adjusted:true,note:'充分補液，監測Cr',route:'iv'}]},
+    {name:'Valacyclovir',class:'Antiviral（Acyclovir PO prodrug）',tier:'alt',tierLabel:'替代 (HSV/VZV PO降階)',po:true,qtc:false,
+     coverage:['HSV-1 / HSV-2','VZV'],
+     doses:[{stage:'eGFR ≥ 50',value:'1000mg Q8h PO（腦炎降階）',note:'由IV Acyclovir降階；生體利用率為Acyclovir 3–5倍',route:'po'},
+            {stage:'eGFR 25–49',value:'1000mg Q12h PO',adjusted:true,route:'po'},
+            {stage:'eGFR 10–24',value:'1000mg Q24h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 10 / HD',value:'500mg Q24h PO',adjusted:true,route:'po'}]},
+    {name:'Meropenem',class:'Carbapenem（良好CSF穿透）',tier:'alt',tierLabel:'替代 (Gram-neg腦膜炎/ESBL)',po:false,qtc:false,
+     coverage:['ESBL producers','Pseudomonas aeruginosa','Acinetobacter baumannii','Enterobacter spp.'],
+     doses:[{stage:'eGFR ≥ 50',value:'2g Q8h IV（腦膜炎最高劑量）',note:'優於Imipenem（Imipenem降癲癇閾值）',route:'iv'},
+            {stage:'eGFR 25–49',value:'2g Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 10–24',value:'1g Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 10 / HD',value:'500mg–1g Q24h IV',adjusted:true,route:'iv'}]},
+    {name:'Linezolid',class:'Oxazolidinone（CSF穿透~100%）',tier:'reserve',tierLabel:'保留 (VRE/難治MRSA腦膜炎)',po:true,qtc:false,
+     coverage:['VRE','MRSA','VISA'],
+     doses:[{stage:'任何腎功能',value:'600mg Q12h IV/PO',note:'血腦屏障穿透率近100%；>2週監測骨髓抑制',route:'both'}]},
+    {name:'Voriconazole',class:'2nd-gen Triazole（優秀CNS穿透）',tier:'reserve',tierLabel:'保留 (Aspergillus CNS)',po:true,qtc:true,
+     coverage:['Aspergillus fumigatus','Aspergillus flavus','Candida (部分)'],
+     doses:[{stage:'eGFR ≥ 50',value:'6 mg/kg Q12h IV × 2劑 → 4 mg/kg Q12h IV；或 400mg Q12h PO × 2劑 → 200mg Q12h PO',note:'TDM目標 1–5.5 mg/L；肝毒性、視覺障礙',route:'both'},
+            {stage:'eGFR 25–49',value:'改口服（IV溶劑SBECD蓄積）',adjusted:true,note:'腎功能下降時建議改PO劑型',route:'po'},
+            {stage:'eGFR < 25 / HD',value:'口服 200mg Q12h（避免IV）',adjusted:true,route:'po'}]},
+    {name:'Liposomal Amphotericin B',class:'Polyene Antifungal（CNS真菌首選）',tier:'reserve',tierLabel:'保留 (Cryptococcal腦膜炎)',po:false,qtc:false,
+     coverage:['Cryptococcus neoformans','Candida CNS','Aspergillus spp. (部分)'],
+     doses:[{stage:'eGFR ≥ 30',value:'L-AmB 3–5 mg/kg Q24h IV',note:'合用 Flucytosine 25 mg/kg Q6h PO × 2週',route:'iv'},
+            {stage:'eGFR 10–29',value:'L-AmB 3 mg/kg Q24h IV（謹慎）',adjusted:true,note:'監測K、Mg及腎功能',route:'iv'},
+            {stage:'eGFR < 10 / HD',value:'需諮詢感染科/藥師',adjusted:true,route:'iv'}]},
+  ]},
+
+  bone:{title:'骨骼關節感染 (Osteomyelitis / Septic Arthritis)',note:'骨髓炎療程4–6週；Septic arthritis 2–4週。S.aureus最常見。植入物感染需長療程或取出，建議感染科會診。',drugs:[
+    {name:'Cephalexin',class:'1st-gen Cephalosporin（口服）',tier:'first',tierLabel:'首選 (MSSA輕症/降階PO)',po:true,qtc:false,
+     coverage:['MSSA','Streptococcus spp.'],
+     doses:[{stage:'eGFR ≥ 35',value:'500–1000mg Q6h PO × 4–6週',note:'口服生體利用率佳，適合長療程',route:'po'},
+            {stage:'eGFR 11–34',value:'500mg Q8–12h PO',adjusted:true,route:'po'},
+            {stage:'eGFR ≤ 10 / HD',value:'250–500mg Q12–24h PO',adjusted:true,route:'po'}]},
+    {name:'Cefazolin',class:'1st-gen Cephalosporin (IV)',tier:'first',tierLabel:'首選 (MSSA IV)',po:false,qtc:false,
+     coverage:['MSSA','Streptococcus spp.'],
+     doses:[{stage:'eGFR ≥ 35',value:'2g Q8h IV × 4–6週',route:'iv'},
+            {stage:'eGFR 11–34',value:'1–2g Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR ≤ 10 / HD',value:'500mg–1g Q24h IV',adjusted:true,route:'iv'}]},
+    {name:'Amoxicillin-Clavulanate',class:'Aminopenicillin / BLI（口服）',tier:'alt',tierLabel:'替代 (Diabetic foot/Strep PO)',po:true,qtc:false,
+     coverage:['MSSA','Streptococcus spp.','E. coli (糖尿病足)','Bacteroides fragilis'],
+     doses:[{stage:'eGFR ≥ 30',value:'875/125mg Q12h PO',route:'po'},
+            {stage:'eGFR 10–29',value:'500/125mg Q12h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 10 / HD',value:'500/125mg Q24h PO',adjusted:true,route:'po'}]},
+    {name:'TMP-SMX',class:'Folate antagonist (CA-MRSA PO)',tier:'alt',tierLabel:'替代 (CA-MRSA PO)',po:true,qtc:false,
+     coverage:['MRSA (CA-MRSA)','MSSA'],
+     doses:[{stage:'eGFR ≥ 30',value:'DS (160/800mg) Q12h PO',route:'po'},
+            {stage:'eGFR 15–29',value:'DS Q24h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 15 / HD',value:'避免使用',adjusted:true,route:'po'}]},
+    {name:'Clindamycin',class:'Lincosamide（骨穿透佳）',tier:'alt',tierLabel:'替代 (口服降階)',po:true,qtc:false,
+     coverage:['MSSA','CA-MRSA (需D-zone test)','Streptococcus spp.','Bacteroides fragilis'],
+     doses:[{stage:'任何腎功能',value:'300–450mg Q6h PO / 600–900mg Q8h IV',note:'骨組織濃度高；注意C.diff風險',route:'both'}]},
+    {name:'Dicloxacillin',class:'Anti-staphylococcal Penicillin (PO)',tier:'alt',tierLabel:'替代 (MSSA PO長療程)',po:true,qtc:false,
+     coverage:['MSSA','Streptococcus spp.'],
+     doses:[{stage:'任何腎功能',value:'500mg Q6h PO × 4–6週（空腹）',note:'骨組織穿透佳；肝臟代謝，腎功能不需調整',route:'po'}]},
+    {name:'Cefuroxime',class:'2nd-gen Cephalosporin（PO）',tier:'alt',tierLabel:'替代 (MSSA/Strep PO)',po:true,qtc:false,
+     coverage:['MSSA','Streptococcus spp.'],
+     doses:[{stage:'eGFR ≥ 30',value:'500mg Q12h PO',route:'po'},
+            {stage:'eGFR 10–29',value:'250mg Q12h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 10 / HD',value:'250mg Q24h PO',adjusted:true,route:'po'}]},
+    {name:'Cefixime',class:'3rd-gen Cephalosporin（口服）',tier:'alt',tierLabel:'替代 (Gram-neg PO長療程)',po:true,qtc:false,
+     coverage:['E. coli','Klebsiella pneumoniae','Proteus mirabilis','H. influenzae'],
+     doses:[{stage:'eGFR ≥ 30',value:'400mg Q24h PO',route:'po'},
+            {stage:'eGFR 15–29',value:'200mg Q24h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 15 / HD',value:'100mg Q24h PO',adjusted:true,route:'po'}]},
+    {name:'Cefepime',class:'4th-gen Cephalosporin（骨穿透佳）',tier:'reserve',tierLabel:'保留 (Pseudomonas骨髓炎)',po:false,qtc:false,
+     coverage:['Pseudomonas aeruginosa','Enterobacter spp.','Gram(-)'],
+     doses:[{stage:'eGFR ≥ 50',value:'2g Q12h IV',route:'iv'},
+            {stage:'eGFR 30–49',value:'1g Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR 11–29',value:'500mg Q12h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR ≤ 10 / HD',value:'250mg Q12h IV',adjusted:true,route:'iv'}]},
+    {name:'Ciprofloxacin / Levofloxacin',class:'Fluoroquinolone（骨穿透優秀）',tier:'alt',tierLabel:'替代 (Gram-neg PO長療程)',po:true,qtc:true,
+     coverage:['Pseudomonas aeruginosa (Cipro)','E. coli','Klebsiella pneumoniae','Enterobacter spp.'],
+     doses:[{stage:'eGFR ≥ 50',value:'Cipro 750mg Q12h PO/IV 或 Levo 750mg Q24h',note:'口服生體利用率~100%，適合長療程',route:'both'},
+            {stage:'eGFR 20–49',value:'Levo 750mg → 500mg Q24h',adjusted:true,route:'both'},
+            {stage:'eGFR < 20 / HD',value:'Levo 500mg loading → 250mg Q48h',adjusted:true,route:'both'}]},
+    {name:'Vancomycin',class:'Glycopeptide',tier:'alt',tierLabel:'替代 (MRSA IV)',po:false,qtc:false,
+     coverage:['MRSA','CoNS'],
+     doses:[{stage:'eGFR ≥ 50',value:'15–20 mg/kg Q8–12h IV',note:'AUC 400–600；骨穿透率20–30%',route:'iv'},
+            {stage:'eGFR 20–49',value:'15–20 mg/kg Q12–24h IV',adjusted:true,route:'iv'},
+            {stage:'eGFR < 20',value:'依AUC/TDM調整',adjusted:true,route:'iv'},
+            {stage:'HD',value:'500–1000mg 透析後',adjusted:true,route:'iv'}]},
+    {name:'Linezolid',class:'Oxazolidinone（骨穿透佳+口服）',tier:'alt',tierLabel:'替代 (MRSA PO長療程)',po:true,qtc:false,
+     coverage:['MRSA','VRE'],
+     doses:[{stage:'任何腎功能',value:'600mg Q12h IV/PO',note:'骨穿透良好；>2週監測骨髓抑制',route:'both'}]},
+    {name:'Rifampin',class:'Rifamycin（Biofilm穿透）',tier:'reserve',tierLabel:'加疊 (植入物相關感染)',po:true,qtc:false,
+     coverage:['S. aureus biofilm','CoNS biofilm'],
+     doses:[{stage:'任何腎功能',value:'300–450mg Q12h PO（需搭配其他抗生素）',note:'⚠️ 不可單藥；P450強誘導劑；監測肝功能',route:'po'}]},
+    {name:'Daptomycin',class:'Lipopeptide',tier:'reserve',tierLabel:'保留 (MRSA/VRE骨髓炎)',po:false,qtc:false,
+     coverage:['MRSA','VRE','Enterococcus spp.'],
+     doses:[{stage:'eGFR ≥ 30',value:'6–8 mg/kg Q24h IV',note:'骨感染較高劑量；監測CK每週',route:'iv'},
+            {stage:'eGFR < 30 / HD',value:'6–8 mg/kg Q48h IV（HD後）',adjusted:true,route:'iv'}]},
+    {name:'Oxacillin',class:'Anti-staphylococcal Penicillin',tier:'first',tierLabel:'首選 (MSSA Osteomyelitis IV)',po:false,qtc:false,
+     coverage:['MSSA','Streptococcus spp.'],
+     doses:[{stage:'eGFR ≥ 10',value:'1–2g Q4–6h IV',note:'MSSA骨髓炎首選IV藥；肝臟代謝',route:'iv'},
+            {stage:'eGFR < 10',value:'1g Q6h IV',adjusted:true,route:'iv'}]},
+    {name:'Dicloxacillin',class:'Anti-staphylococcal Penicillin（口服）',tier:'alt',tierLabel:'替代 (MSSA PO降階)',po:true,qtc:false,
+     coverage:['MSSA','Streptococcus spp.'],
+     doses:[{stage:'任何腎功能',value:'500mg Q6h PO（空腹）',note:'骨骼感染MSSA口服降階；需空腹服用',route:'po'}]},
+    {name:'Cefuroxime',class:'2nd-gen Cephalosporin（PO）',tier:'alt',tierLabel:'替代 (輕症/降階PO)',po:true,qtc:false,
+     coverage:['MSSA','Streptococcus spp.','H. influenzae'],
+     doses:[{stage:'eGFR ≥ 30',value:'500mg Q12h PO',route:'po'},
+            {stage:'eGFR 10–29',value:'250–500mg Q12h PO',adjusted:true,route:'po'},
+            {stage:'eGFR < 10 / HD',value:'250mg Q24h PO',adjusted:true,route:'po'}]},
+    {name:'Cefixime',class:'3rd-gen Cephalosporin（口服）',tier:'alt',tierLabel:'替代 (Gram-neg PO)',po:true,qtc:false,
+     coverage:['E. coli','Klebsiella pneumoniae','Proteus mirabilis','H. influenzae'],
+     doses:[{stage:'eGFR ≥ 60',value:'400mg Q24h PO',note:'口服Gram-neg骨感染降階；不覆蓋Pseudomonas',route:'po'},
+            {stage:'eGFR 21–59',value:'300mg Q24h PO',adjusted:true,route:'po'},
+            {stage:'eGFR ≤ 20 / HD',value:'200mg Q24h PO',adjusted:true,route:'po'}]},
+  ]},
+};
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function hasPO(drug){
+  return drug.doses.some(d=>d.route==='po'||d.route==='both');
+}
+
+function renderDrugCard(drug, site, isShared, isPO, egfr) {
+  var fdaUrl = drugSources[drug.name] || '';
+  var o = '';
+  var borderStyle = isShared ? 'border-color:#3fb950;border-width:2px;' : '';
+  o += '<div class="abx-card" style="' + borderStyle + '">';
+  o += '<div class="abx-header"><div>';
+  o += '<div class="abx-name-row">';
+  o += '<span class="abx-name">' + drug.name + '</span>';
+  if (drug.qtc)   o += '<span class="qtc-badge">⚡ QTc</span>';
+  if (isShared)   o += '<span class="shared-badge">✦ 共同</span>';
+  if (fdaUrl)     o += '<a class="abx-fda-link" href="' + fdaUrl + '" target="_blank">📎 FDA</a>';
+  o += '</div>';
+  o += '<div class="abx-class">' + drug.class + '</div>';
+  o += '</div>';
+  o += '<span class="tier-badge tier-' + drug.tier + '">' + drug.tierLabel + '</span>';
+  o += '</div>';
+  o += '<div class="abx-body">';
+  var doses = drug.doses;
+  if (isPO) doses = doses.filter(function(d) { return d.route === 'po' || d.route === 'both'; });
+  doses.forEach(function(dose) {
+    var active   = isDoseActive(dose.stage, egfr);
+    var valueCls = active ? (dose.adjusted ? 'dose-value adjusted' : 'dose-value highlight-dose') : 'dose-value';
+    var rowStyle = active ? 'background:rgba(88,166,255,0.07);border-radius:4px;margin:-2px -4px;padding:7px 4px;' : '';
+    o += '<div class="dose-row" style="' + rowStyle + '">';
+    o += '<div class="dose-stage">' + dose.stage + (active ? ' ◀' : '') + '</div>';
+    o += '<div class="dose-info"><div class="' + valueCls + '">' + dose.value + '</div>';
+    if (dose.note) o += '<div class="dose-note">' + dose.note + '</div>';
+    o += '</div></div>';
+  });
+  o += '</div>';
+  if (drug.coverage && drug.coverage.length) {
+    o += '<div class="coverage-row">';
+    drug.coverage.forEach(function(c) { o += '<span class="ctag">' + c + '</span>'; });
+    o += '</div>';
+  }
+  o += '</div>';
+  return o;
+}
+
+function renderResults() {
+  var container = document.getElementById('results');
+
+  if (currentEgfr === null || selectedSites.length === 0) {
+    var msg;
+    if (currentEgfr === null && selectedSites.length > 0) {
+      msg = '<div class="empty-icon">⬆️</div>請往上輸入腎功能數值';
+    } else if (selectedSites.length === 0 && currentEgfr !== null) {
+      msg = '<div class="empty-icon">⬆️</div>請往上選擇感染部位';
+    } else {
+      msg = '<div class="empty-icon">💊</div>請輸入腎功能數值<br>並選擇感染部位';
+    }
+    container.innerHTML = '<div class="empty-state">' + msg + '</div>';
+    return;
+  }
+
+  var sites = selectedSites.slice();
+  var multi = sites.length > 1;
+  var isPO  = currentRoute === 'po';
+
+  // 複選時找共同有效藥物
+  var sharedNames = null;
+  if (multi) {
+    var firstSet = {};
+    (abx[sites[0]] && abx[sites[0]].drugs || []).forEach(function(d) { firstSet[d.name] = true; });
+    sharedNames = {};
+    Object.keys(firstSet).forEach(function(name) {
+      var inAll = sites.every(function(site) {
+        return (abx[site] && abx[site].drugs || []).some(function(d) { return d.name === name; });
+      });
+      if (inAll) sharedNames[name] = true;
+    });
+  }
+
+  var html = '';
+
+  if (multi) {
+    var siteLabels = sites.map(function(s) { return abx[s] ? abx[s].title : s; }).join('、');
+    var hasShared  = sharedNames && Object.keys(sharedNames).length > 0;
+    html += '<div class="multi-result-header">🔗 複合感染：' + siteLabels + '<br>'
+          + (hasShared ? '共同有效抗生素已標示 ✦' : '（無完全共同的抗生素，請參考各部位建議）') + '</div>';
+  }
+
+  if (isPO) {
+    html += '<div class="po-only-note">💊 口服模式：僅顯示有 PO 劑型的抗生素（適合出院帶藥）</div>';
+  }
+
+  var tiers      = ['first', 'alt', 'reserve', 'last'];
+  var tierLabels = { first: '首選用藥', alt: '替代 / 加疊選項', reserve: '保留用藥', last: '最後武器' };
+  var tierCls    = { first: 'tier-first', alt: 'tier-alt', reserve: 'tier-reserve', last: 'tier-last' };
+
+  // multi模式：所有部位的共同藥物，只在最頂部顯示一次
+  if (multi && sharedNames && Object.keys(sharedNames).length > 0) {
+    html += '<div class="section-divider" style="color:#3fb950;border-color:#1a4a2a;font-size:11px;">✦ 共同有效抗生素（優先考慮）</div>';
+    // 從第一個部位取共同藥物的完整資料
+    var firstSiteData = abx[sites[0]];
+    if (firstSiteData) {
+      var sharedDrugsList = firstSiteData.drugs.filter(function(d) { return sharedNames[d.name]; });
+      if (isPO) sharedDrugsList = sharedDrugsList.filter(function(d) { return hasPO(d); });
+      sharedDrugsList.forEach(function(drug) {
+        html += renderDrugCard(drug, sites[0], true, isPO, currentEgfr);
+      });
+    }
+    html += '<div style="border-top:1px solid #30363d;margin:12px 0 8px;"></div>';
+  }
+
+  sites.forEach(function(site) {
+    var data = abx[site];
+    if (!data) return;
+
+    html += '<div class="label" style="margin:' + (multi ? '16px 0 6px' : '0 0 8px') + '">'
+          + data.title + ' — eGFR ' + currentEgfr + '</div>';
+    if (data.note) {
+      html += '<div class="abx-note">💡 ' + data.note + '</div>';
+    }
+
+    tiers.forEach(function(tier) {
+      var drugs = data.drugs.filter(function(d) { return d.tier === tier; });
+      if (multi && sharedNames) drugs = drugs.filter(function(d) { return !sharedNames[d.name]; });
+      if (isPO) drugs = drugs.filter(function(d) { return hasPO(d); });
+      if (!drugs.length) return;
+      html += '<div class="section-divider">' + tierLabels[tier] + '</div>';
+      drugs.forEach(function(drug) {
+        html += renderDrugCard(drug, site, false, isPO, currentEgfr);
+      });
+    });;
+  });
+
+  container.innerHTML = html;
+}
+
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').catch(()=>{});});
+}
+</script>
+</body>
+</html>
