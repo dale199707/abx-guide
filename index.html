@@ -1443,21 +1443,8 @@ function showDrugInfo(drugName, fdaUrl) {
     return;
   }
 
-  // 3. 需要 API key
-  var apiKey = '';
-  try { apiKey = localStorage.getItem('abx_openai_key') || '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'; } catch(e) {}
-  if (!apiKey) {
-    loading.style.display = 'none';
-    errorEl.style.display = 'block';
-    errorEl.innerHTML = '<div style="margin-bottom:12px;">🔑 需要 Claude API Key 才能使用此功能</div>' +
-      '<input id="api-key-input" type="password" placeholder="sk-proj-...（OpenAI API Key）" style="width:100%;padding:8px;background:#21262d;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-family:monospace;font-size:12px;box-sizing:border-box;margin-bottom:8px;">' +
-      '<button onclick="saveApiKey()" style="width:100%;padding:8px;background:#238636;border:none;border-radius:6px;color:#fff;font-weight:700;cursor:pointer;">儲存並查詢</button>' +
-      '<div style="font-size:10px;color:#484f58;margin-top:8px;">Key 只儲存在你的瀏覽器，不會傳給任何人<br>取得 API Key: <a href="https://platform.openai.com/api-keys" target="_blank" style="color:#58a6ff;">platform.openai.com/api-keys</a></div>';
-    return;
-  }
-
-  // 4. 呼叫 API
-  fetchDrugInfo(drugName, apiKey).then(function(resultHtml) {
+  // 3. 呼叫 Cloudflare Worker
+  fetchDrugInfo(drugName).then(function(resultHtml) {
     drugInfoCache[drugName] = resultHtml;
     try { localStorage.setItem(lsKey, resultHtml); } catch(e) {}
     loading.style.display = 'none';
@@ -1521,28 +1508,11 @@ document.getElementById('drug-modal').addEventListener('click', function(e) {
   if (e.target === this) closeDrugModal();
 });
 
-async function fetchDrugInfo(drugName, apiKey) {
-  var p1 = 'You are an infectious disease pharmacist. Provide a comprehensive, detailed English drug summary for ' + drugName + ' for use by resident physicians.';
-  var p2 = 'Output ONLY HTML directly (no markdown code blocks). Use exactly this structure for each section:';
-  var p3 = "<div class='drug-section'><div class='section-title'>TITLE</div><div class='section-content'>CONTENT</div></div>";
-  var p4 = 'Section 1: 💊 Dosing & Administration — Include ALL of: standard IV dose, extended infusion dose (if applicable), oral dose (if available), renal dosing table for ALL stages (eGFR ≥60, 30-59, 15-29, <15, HD, CRRT if relevant). Use HTML <table> with columns: eGFR Range | Dose | Interval | Notes.';
-  var p5 = '🦠 Antimicrobial Spectrum — List ALL organisms covered/not covered. Organize by: Gram-positive (list each organism + coverage level), Gram-negative (list each organism), Anaerobes, Atypicals/Fungi/Others. Use HTML table: Organism | Coverage (Good/Partial/None) | Notes.';
-  var p6 = "⚠️ Adverse Effects — List ALL known adverse effects comprehensively (10+ items minimum). IMPORTANT: Sort by severity - put the most serious/important adverse effects (marked with <span class='warn'>⚠️ TEXT</span>) at the TOP of the list first, then less severe ones below. Include frequency if known, monitoring parameters.";
-  var p7 = '🚫 Contraindications & Drug Interactions — List ALL contraindications, precautions, and clinically significant drug interactions with mechanism.';
-  var p8 = '🏥 Clinical Pearls — When to use as first-line, when to avoid, special populations (renal/hepatic/pregnancy/pediatric), PK/PD considerations, resistance patterns, stewardship notes.';
-  var prompt = [p1,p2,p3,p4,p5,p6,p7,p8].join(' ');
-
-  var response = await fetch('https://api.openai.com/v1/chat/completions', {
+async function fetchDrugInfo(drugName) {
+  var response = await fetch('https://abx-api.dale199707.workers.dev', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + apiKey
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      max_tokens: 3000,
-      messages: [{ role: 'user', content: prompt }]
-    })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ drugName: drugName })
   });
 
   if (!response.ok) {
