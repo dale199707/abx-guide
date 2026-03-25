@@ -223,7 +223,7 @@ input[type="number"]:focus{border-color:var(--accent);}
 </div>
 
 <!-- Infection Site -->
-<div class="section" style="margin-top:12px;">
+<div id="search-section-sites" class="section" style="margin-top:12px;">
   <div class="label">感染部位 <span style="color:var(--accent);font-size:9px;">（可複選）</span></div>
   <div class="site-grid">
     <button class="site-btn site-btn-unknown" onclick="toggleSite('unknown')" id="site-unknown"><span class="check">✓</span><span class="icon">❓</span>尚不明 Unknown</button>
@@ -562,11 +562,11 @@ function showDiagnosisResults() {
 
   var diagnosis = input.value.trim();
 
-  // 切換到結果頁
+  // 切換到結果頁（完整隱藏搜尋區）
   document.getElementById('search-section').style.display = 'none';
   document.getElementById('result-page').style.display = 'block';
 
-  // 顯示摘要
+  // 顯示摘要（標示這是診斷模式）
   document.getElementById('result-summary').innerHTML =
     '🔬 <strong>' + diagnosis + '</strong> &nbsp;|&nbsp; 🫘 eGFR ' + currentEgfr + ' ml/min/1.73m² &nbsp;|&nbsp; 💊 ' + (currentRoute === 'po' ? '口服 PO' : 'IV + PO');
 
@@ -580,8 +580,29 @@ function showDiagnosisResults() {
 
   window.scrollTo({top: 0, behavior: 'smooth'});
 
+  // 診斷快取 key（包含 eGFR 和 route，因為劑量不同）
+  var diagCacheKey = 'abx_diag_' + diagnosis.replace(/[^a-zA-Z0-9一-鿿]/g,'_') + '_' + currentEgfr + '_' + currentRoute;
+
+  // 先查記憶體快取
+  if (diagnosisCache[diagCacheKey]) {
+    resultsDiv.innerHTML = diagnosisCache[diagCacheKey];
+    return;
+  }
+
+  // 再查 localStorage
+  var cachedDiag = null;
+  try { cachedDiag = localStorage.getItem(diagCacheKey); } catch(e) {}
+  if (cachedDiag) {
+    diagnosisCache[diagCacheKey] = cachedDiag;
+    resultsDiv.innerHTML = cachedDiag;
+    return;
+  }
+
   // 呼叫 Worker
   fetchDiagnosisInfo(diagnosis, currentEgfr, currentRoute).then(function(resultHtml) {
+    // 存入快取
+    diagnosisCache[diagCacheKey] = resultHtml;
+    try { localStorage.setItem(diagCacheKey, resultHtml); } catch(e) {}
     resultsDiv.innerHTML = resultHtml;
   }).catch(function(err) {
     resultsDiv.innerHTML = '<div style="text-align:center;padding:30px;color:#f85149;">⚠️ 查詢失敗：' + err.message + '</div>';
@@ -602,6 +623,14 @@ async function fetchDiagnosisInfo(diagnosis, egfr, route) {
   var data = await response.json();
   var text = data.choices[0].message.content;
   text = text.replace(/^```html?\n?/,'').replace(/\n?```$/,'');
+
+  // 把 arc-name 的藥名加上點擊 → AI 整理藥物資訊
+  text = text.replace(/<span class=['"]arc-name['"]>([^<]+)<\/span>/g, function(match, name) {
+    var drugName = name.trim();
+    var fdaUrl = drugSources[drugName] || 'https://www.drugs.com/search.cfm?searchterm=' + encodeURIComponent(drugName);
+    return '<span class="arc-name abx-name-link" data-drug="' + drugName.replace(/"/g,'&quot;') + '" data-url="' + fdaUrl + '" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(121,192,255,0.5);" title="點擊查看詳細藥物資訊">' + drugName + ' 🔍</span>';
+  });
+
   return text;
 }
 
@@ -1571,6 +1600,7 @@ if('serviceWorker' in navigator){
 }
 // ── DRUG INFO MODAL with Claude API ─────────────────────────────────────────
 var drugInfoCache = {};
+var diagnosisCache = {};
 
 // Event delegation：監聽所有 data-drug 點擊
 document.addEventListener('click', function(e) {
@@ -1661,15 +1691,16 @@ function refreshDrugInfo() {
 }
 
 function clearAllDrugCache() {
-  // 清除所有藥物快取（保留 API Key）
+  // 清除所有藥物和診斷快取（保留 API Key）
   drugInfoCache = {};
+  diagnosisCache = {};
   try {
     var keys = Object.keys(localStorage);
     keys.forEach(function(k) {
-      if (k.startsWith('abx_drug_')) localStorage.removeItem(k);
+      if (k.startsWith('abx_drug_') || k.startsWith('abx_diag_')) localStorage.removeItem(k);
     });
   } catch(e) {}
-  alert('✅ 所有藥物快取已清除！下次點藥名將重新查詢。');
+  alert('✅ 所有快取已清除！（藥物 + 診斷查詢）');
 }
 
 function closeDrugModal() {
