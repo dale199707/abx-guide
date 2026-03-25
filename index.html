@@ -600,20 +600,31 @@ function showDiagnosisResults() {
 
   // 呼叫 Worker
   fetchDiagnosisInfo(diagnosis, currentEgfr, currentRoute).then(function(resultHtml) {
+    // 加入腎功能警語
+    var warningBanner = '<div style="background:#1a0e00;border:1px solid #f0a030;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:11px;font-family:'SF Mono',monospace;color:#f0a030;line-height:1.6;">' +
+      '⚠️ <strong>劑量僅供參考</strong>：此建議由 AI 根據 eGFR ' + currentEgfr + ' 即時生成。' +
+      '腎功能劑量調整已依標準分期套用，但仍請<strong>點擊藥名查看完整腎功能分期劑量表</strong>後再用藥。' +
+      '實際用藥請依院內 antibiogram 及主治醫師指示。</div>';
+    var finalHtml = warningBanner + resultHtml;
     // 存入快取
-    diagnosisCache[diagCacheKey] = resultHtml;
-    try { localStorage.setItem(diagCacheKey, resultHtml); } catch(e) {}
-    resultsDiv.innerHTML = resultHtml;
+    diagnosisCache[diagCacheKey] = finalHtml;
+    try { localStorage.setItem(diagCacheKey, finalHtml); } catch(e) {}
+    resultsDiv.innerHTML = finalHtml;
   }).catch(function(err) {
     resultsDiv.innerHTML = '<div style="text-align:center;padding:30px;color:#f85149;">⚠️ 查詢失敗：' + err.message + '</div>';
   });
 }
 
 async function fetchDiagnosisInfo(diagnosis, egfr, route) {
+  // 加入 eGFR 嚴重度標籤，讓 Worker 更清楚腎功能狀態
+  var egfrLabel = egfr >= 60 ? 'Normal (G1-G2)' :
+                  egfr >= 30 ? 'Moderate CKD (G3)' :
+                  egfr >= 15 ? 'Severe CKD (G4)' :
+                               'Kidney Failure (G5/HD)';
   var response = await fetch('https://abx-api.dale199707.workers.dev/diagnosis', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ diagnosis: diagnosis, egfr: egfr, route: route })
+    body: JSON.stringify({ diagnosis: diagnosis, egfr: egfr, egfrLabel: egfrLabel, route: route })
   });
 
   if (!response.ok) {
@@ -627,7 +638,26 @@ async function fetchDiagnosisInfo(diagnosis, egfr, route) {
   // 把 arc-name 的藥名加上點擊 → AI 整理藥物資訊
   text = text.replace(/<span class=['"]arc-name['"]>([^<]+)<\/span>/g, function(match, name) {
     var drugName = name.trim();
-    var fdaUrl = drugSources[drugName] || 'https://www.drugs.com/search.cfm?searchterm=' + encodeURIComponent(drugName);
+    // 大小寫不敏感查詢：先直接找，再轉首字母大寫找，再全小寫對比
+    var fdaUrl = drugSources[drugName];
+    if (!fdaUrl) {
+      // 轉成 Title Case 再找 (VANCOMYCIN → Vancomycin)
+      var titleCase = drugName.charAt(0).toUpperCase() + drugName.slice(1).toLowerCase();
+      fdaUrl = drugSources[titleCase];
+    }
+    if (!fdaUrl) {
+      // 嘗試每個 key 做大小寫不敏感比對
+      var lowerName = drugName.toLowerCase();
+      Object.keys(drugSources).forEach(function(k) {
+        if (!fdaUrl && k.toLowerCase() === lowerName) fdaUrl = drugSources[k];
+      });
+    }
+    if (!fdaUrl) {
+      // 取第一個單字再試一次
+      var firstWord = drugName.split(' ')[0];
+      var titleFirst = firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase();
+      fdaUrl = drugSources[titleFirst] || ('https://www.drugs.com/search.cfm?searchterm=' + encodeURIComponent(drugName));
+    }
     return '<span class="arc-name abx-name-link" data-drug="' + drugName.replace(/"/g,'&quot;') + '" data-url="' + fdaUrl + '" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(121,192,255,0.5);" title="點擊查看詳細藥物資訊">' + drugName + ' 🔍</span>';
   });
 
@@ -673,92 +703,92 @@ function hasPO(drug) {
 // ── DRUG REFERENCE LINKS (Drugs.com monograph) ───────────────────────────────
 var drugSources = {
   // Fluoroquinolones
-  'Ciprofloxacin':            'https://www.drugs.com/monograph/ciprofloxacin.html',
-  'Levofloxacin':             'https://www.drugs.com/monograph/levofloxacin.html',
-  'Moxifloxacin':             'https://www.drugs.com/monograph/moxifloxacin.html',
-  'Delafloxacin':             'https://www.drugs.com/monograph/delafloxacin.html',
-  'Ofloxacin':                'https://www.drugs.com/monograph/ofloxacin.html',
-  // Cephalosporins - oral
-  'Cephalexin':               'https://www.drugs.com/monograph/cephalexin.html',
-  'Cefadroxil':               'https://www.drugs.com/monograph/cefadroxil.html',
-  'Cefaclor':                 'https://www.drugs.com/monograph/cefaclor.html',
-  'Cefprozil':                'https://www.drugs.com/monograph/cefprozil.html',
-  'Cefuroxime':               'https://www.drugs.com/monograph/cefuroxime.html',
-  'Cefdinir':                 'https://www.drugs.com/monograph/cefdinir.html',
-  'Cefditoren':               'https://www.drugs.com/monograph/cefditoren.html',
-  'Cefixime':                 'https://www.drugs.com/monograph/cefixime.html',
-  'Cefpodoxime':              'https://www.drugs.com/monograph/cefpodoxime.html',
-  'Ceftibuten':               'https://www.drugs.com/monograph/ceftibuten.html',
-  // Cephalosporins - IV
-  'Ceftriaxone':              'https://www.drugs.com/monograph/ceftriaxone.html',
-  'Cefazolin':                'https://www.drugs.com/monograph/cefazolin.html',
-  'Cefepime':                 'https://www.drugs.com/monograph/cefepime.html',
-  'Ceftaroline':              'https://www.drugs.com/monograph/ceftaroline.html',
-  'Ceftazidime-Avibactam':    'https://www.drugs.com/monograph/ceftazidime-avibactam.html',
-  'Ceftolozane-Tazobactam':   'https://www.drugs.com/monograph/ceftolozane-tazobactam.html',
+  'Ciprofloxacin':            'https://www.drugs.com/ciprofloxacin.html',
+  'Levofloxacin':             'https://www.drugs.com/levofloxacin.html',
+  'Moxifloxacin':             'https://www.drugs.com/moxifloxacin.html',
+  'Delafloxacin':             'https://www.drugs.com/delafloxacin.html',
+  'Ofloxacin':                'https://www.drugs.com/ofloxacin.html',
+  // Cephalosporins oral
+  'Cephalexin':               'https://www.drugs.com/cephalexin.html',
+  'Cefadroxil':               'https://www.drugs.com/cefadroxil.html',
+  'Cefaclor':                 'https://www.drugs.com/cefaclor.html',
+  'Cefprozil':                'https://www.drugs.com/cefprozil.html',
+  'Cefuroxime':               'https://www.drugs.com/cefuroxime.html',
+  'Cefdinir':                 'https://www.drugs.com/cefdinir.html',
+  'Cefditoren':               'https://www.drugs.com/cefditoren.html',
+  'Cefixime':                 'https://www.drugs.com/cefixime.html',
+  'Cefpodoxime':              'https://www.drugs.com/cefpodoxime.html',
+  'Ceftibuten':               'https://www.drugs.com/ceftibuten.html',
+  // Cephalosporins IV
+  'Ceftriaxone':              'https://www.drugs.com/ceftriaxone.html',
+  'Cefazolin':                'https://www.drugs.com/cefazolin.html',
+  'Cefepime':                 'https://www.drugs.com/cefepime.html',
+  'Ceftaroline':              'https://www.drugs.com/ceftaroline.html',
+  'Ceftazidime-Avibactam':    'https://www.drugs.com/ceftazidime-avibactam.html',
+  'Ceftolozane-Tazobactam':   'https://www.drugs.com/ceftolozane-tazobactam.html',
   // Penicillins
-  'Amoxicillin':              'https://www.drugs.com/monograph/amoxicillin.html',
-  'Ampicillin':               'https://www.drugs.com/monograph/ampicillin.html',
-  'Oxacillin':                'https://www.drugs.com/monograph/oxacillin.html',
-  'Dicloxacillin':            'https://www.drugs.com/monograph/dicloxacillin.html',
-  'Cloxacillin':              'https://www.drugs.com/monograph/cloxacillin.html',
-  'Penicillin VK':            'https://www.drugs.com/monograph/penicillin-v-potassium.html',
+  'Amoxicillin':              'https://www.drugs.com/amoxicillin.html',
+  'Ampicillin':               'https://www.drugs.com/ampicillin.html',
+  'Oxacillin':                'https://www.drugs.com/oxacillin.html',
+  'Dicloxacillin':            'https://www.drugs.com/dicloxacillin.html',
+  'Cloxacillin':              'https://www.drugs.com/cloxacillin.html',
+  'Penicillin VK':            'https://www.drugs.com/penicillin-v-potassium.html',
   'Amoxicillin-Clavulanate':  'https://www.drugs.com/amoxicillin_clavulanate.html',
-  'Ampicillin-Sulbactam':     'https://www.drugs.com/monograph/ampicillin-sulbactam.html',
-  'Piperacillin-Tazobactam':  'https://www.drugs.com/monograph/piperacillin-tazobactam.html',
-  // Carbapenems / novel beta-lactams
-  'Meropenem':                'https://www.drugs.com/monograph/meropenem.html',
-  'Ertapenem':                'https://www.drugs.com/monograph/ertapenem.html',
-  'Imipenem-Cilastatin':      'https://www.drugs.com/monograph/imipenem-cilastatin.html',
+  'Ampicillin-Sulbactam':     'https://www.drugs.com/ampicillin-sulbactam.html',
+  'Piperacillin-Tazobactam':  'https://www.drugs.com/piperacillin-tazobactam.html',
+  // Carbapenems
+  'Meropenem':                'https://www.drugs.com/meropenem.html',
+  'Ertapenem':                'https://www.drugs.com/ertapenem.html',
+  'Imipenem-Cilastatin':      'https://www.drugs.com/imipenem-cilastatin.html',
   // Glycopeptides / Lipopeptides / Oxazolidinones
-  'Vancomycin':               'https://www.drugs.com/monograph/vancomycin.html',
-  'Linezolid':                'https://www.drugs.com/monograph/linezolid.html',
-  'Tedizolid':                'https://www.drugs.com/monograph/tedizolid.html',
-  'Daptomycin':               'https://www.drugs.com/monograph/daptomycin.html',
-  // Tetracyclines / Glycylcyclines
-  'Tigecycline':              'https://www.drugs.com/monograph/tigecycline.html',
-  'Doxycycline':              'https://www.drugs.com/monograph/doxycycline.html',
-  'Minocycline':              'https://www.drugs.com/monograph/minocycline.html',
-  'Omadacycline':             'https://www.drugs.com/monograph/omadacycline.html',
+  'Vancomycin':               'https://www.drugs.com/vancomycin.html',
+  'Linezolid':                'https://www.drugs.com/linezolid.html',
+  'Tedizolid':                'https://www.drugs.com/tedizolid.html',
+  'Daptomycin':               'https://www.drugs.com/daptomycin.html',
+  // Tetracyclines
+  'Tigecycline':              'https://www.drugs.com/tigecycline.html',
+  'Doxycycline':              'https://www.drugs.com/doxycycline.html',
+  'Minocycline':              'https://www.drugs.com/minocycline.html',
+  'Omadacycline':             'https://www.drugs.com/omadacycline.html',
   // Macrolides
-  'Azithromycin':             'https://www.drugs.com/monograph/azithromycin.html',
-  'Clarithromycin':           'https://www.drugs.com/monograph/clarithromycin.html',
-  'Erythromycin':             'https://www.drugs.com/monograph/erythromycin.html',
-  'Fidaxomicin':              'https://www.drugs.com/monograph/fidaxomicin.html',
+  'Azithromycin':             'https://www.drugs.com/azithromycin.html',
+  'Clarithromycin':           'https://www.drugs.com/clarithromycin.html',
+  'Erythromycin':             'https://www.drugs.com/erythromycin.html',
+  'Fidaxomicin':              'https://www.drugs.com/fidaxomicin.html',
   // Lincosamides
-  'Clindamycin':              'https://www.drugs.com/monograph/clindamycin.html',
+  'Clindamycin':              'https://www.drugs.com/clindamycin.html',
   // Nitroimidazoles
-  'Metronidazole':            'https://www.drugs.com/monograph/metronidazole.html',
-  'Tinidazole':               'https://www.drugs.com/monograph/tinidazole.html',
-  'Secnidazole':              'https://www.drugs.com/monograph/secnidazole.html',
-  // Sulfonamides / UTI-specific
+  'Metronidazole':            'https://www.drugs.com/metronidazole.html',
+  'Tinidazole':               'https://www.drugs.com/tinidazole.html',
+  'Secnidazole':              'https://www.drugs.com/secnidazole.html',
+  // Sulfonamides / UTI
   'TMP-SMX':                  'https://www.drugs.com/mtm/sulfamethoxazole-and-trimethoprim.html',
-  'Trimethoprim':             'https://www.drugs.com/monograph/trimethoprim.html',
-  'Nitrofurantoin':           'https://www.drugs.com/monograph/nitrofurantoin.html',
-  'Fosfomycin':               'https://www.drugs.com/monograph/fosfomycin.html',
+  'Trimethoprim':             'https://www.drugs.com/trimethoprim.html',
+  'Nitrofurantoin':           'https://www.drugs.com/nitrofurantoin.html',
+  'Fosfomycin':               'https://www.drugs.com/fosfomycin.html',
   // Polymyxins / Aminoglycosides
-  'Colistin':                 'https://www.drugs.com/monograph/colistin.html',
-  'Gentamicin':               'https://www.drugs.com/monograph/gentamicin.html',
-  'Tobramycin':               'https://www.drugs.com/monograph/tobramycin.html',
-  'Amikacin':                 'https://www.drugs.com/monograph/amikacin.html',
+  'Colistin':                 'https://www.drugs.com/colistin.html',
+  'Gentamicin':               'https://www.drugs.com/gentamicin.html',
+  'Tobramycin':               'https://www.drugs.com/tobramycin.html',
+  'Amikacin':                 'https://www.drugs.com/amikacin.html',
   // Antifungals
-  'Fluconazole':              'https://www.drugs.com/monograph/fluconazole.html',
-  'Voriconazole':             'https://www.drugs.com/monograph/voriconazole.html',
-  'Micafungin':               'https://www.drugs.com/monograph/micafungin.html',
-  'Caspofungin':              'https://www.drugs.com/monograph/caspofungin.html',
-  'Liposomal Amphotericin B': 'https://www.drugs.com/monograph/amphotericin-b-liposomal.html',
+  'Fluconazole':              'https://www.drugs.com/fluconazole.html',
+  'Voriconazole':             'https://www.drugs.com/voriconazole.html',
+  'Micafungin':               'https://www.drugs.com/micafungin.html',
+  'Caspofungin':              'https://www.drugs.com/caspofungin.html',
+  'Liposomal Amphotericin B': 'https://www.drugs.com/amphotericin-b.html',
   // Antivirals / Other
-  'Acyclovir':                'https://www.drugs.com/monograph/acyclovir.html',
-  'Valacyclovir':             'https://www.drugs.com/monograph/valacyclovir.html',
-  'Rifampin':                 'https://www.drugs.com/monograph/rifampin.html',
-  'Lefamulin':                'https://www.drugs.com/monograph/lefamulin.html',
-  // Combo labels
-  'Cefazolin + Metronidazole':     'https://www.drugs.com/monograph/cefazolin.html',
-  'Ceftriaxone + Metronidazole':   'https://www.drugs.com/monograph/ceftriaxone.html',
-  'Ciprofloxacin + Metronidazole': 'https://www.drugs.com/monograph/ciprofloxacin.html',
-  'Pip-Tazo + Vancomycin':         'https://www.drugs.com/monograph/piperacillin-tazobactam.html',
-  'Ciprofloxacin / Levofloxacin':  'https://www.drugs.com/monograph/ciprofloxacin.html',
-  'Micafungin / Caspofungin':      'https://www.drugs.com/monograph/micafungin.html',
+  'Acyclovir':                'https://www.drugs.com/acyclovir.html',
+  'Valacyclovir':             'https://www.drugs.com/valacyclovir.html',
+  'Rifampin':                 'https://www.drugs.com/rifampin.html',
+  'Lefamulin':                'https://www.drugs.com/lefamulin.html',
+  // Combo labels → primary drug
+  'Cefazolin + Metronidazole':     'https://www.drugs.com/cefazolin.html',
+  'Ceftriaxone + Metronidazole':   'https://www.drugs.com/ceftriaxone.html',
+  'Ciprofloxacin + Metronidazole': 'https://www.drugs.com/ciprofloxacin.html',
+  'Pip-Tazo + Vancomycin':         'https://www.drugs.com/piperacillin-tazobactam.html',
+  'Ciprofloxacin / Levofloxacin':  'https://www.drugs.com/ciprofloxacin.html',
+  'Micafungin / Caspofungin':      'https://www.drugs.com/micafungin.html',
 };
 
 var siteGuidelines = {
@@ -1619,7 +1649,12 @@ function showDrugInfo(drugName, fdaUrl) {
   var errorEl = document.getElementById('modal-error');
 
   nameEl.textContent = drugName;
-  fdaLink.href = fdaUrl || '#';
+  // 確保 Drugs.com 連結有效
+  var resolvedUrl = fdaUrl || drugSources[drugName] || '';
+  if (!resolvedUrl) {
+    resolvedUrl = 'https://www.drugs.com/search.cfm?searchterm=' + encodeURIComponent(drugName);
+  }
+  fdaLink.href = resolvedUrl;
   modal.style.display = 'block';
   document.body.style.overflow = 'hidden';
   loading.style.display = 'block';
