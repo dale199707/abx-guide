@@ -124,6 +124,7 @@ input[type="number"]:focus{border-color:var(--accent);}
 </style>
 </head>
 <body>
+<div id="search-section">
 <header>
   <h1>🩺 抗生素參考指引 v7</h1>
   <p>surgical resident reference · 僅供臨床參考使用</p>
@@ -214,10 +215,20 @@ input[type="number"]:focus{border-color:var(--accent);}
     <button class="site-btn" onclick="toggleSite('bone')" id="site-bone"><span class="check">✓</span><span class="icon">🦴</span>骨骼關節 Bone/Joint</button>
   </div>
   <div class="multi-hint" id="multi-hint"></div>
+  <button id="search-btn" onclick="showResults()" style="display:none;width:100%;margin-top:12px;padding:14px;background:var(--accent);color:#0d1117;font-weight:700;font-size:14px;font-family:var(--mono);border:none;border-radius:8px;cursor:pointer;letter-spacing:.05em;">🔍 查詢抗生素建議</button>
+</div>
 </div>
 
-<div class="results" id="results">
+<div id="result-page" style="display:none;">
+  <button onclick="backToSearch()" style="display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-family:var(--mono);font-size:12px;padding:8px 14px;border-radius:6px;cursor:pointer;margin-bottom:12px;">← 返回搜尋</button>
+  <div id="result-summary" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.6;"></div>
+  <div class="results" id="results">
   <div class="empty-state"><div class="empty-icon">💊</div>請輸入腎功能數值<br>並選擇感染部位<br>以顯示抗生素建議</div>
+  </div>
+</div>
+
+<div style="text-align:center;padding:8px 0 0;">
+  <button onclick="clearAllDrugCache()" style="background:none;border:1px solid #30363d;color:#484f58;font-size:10px;font-family:'SF Mono',monospace;padding:4px 12px;border-radius:4px;cursor:pointer;">🗑 清除所有藥物快取</button>
 </div>
 
 <script>
@@ -323,6 +334,7 @@ function updateKidney() {
   }
 
   renderResults();
+  updateSearchBtn();
 }
 
 // ── SITE SELECTION ────────────────────────────────────────────────────────────
@@ -385,7 +397,43 @@ function toggleSite(site) {
   }
 }
 
+function showResults() {
+  // 切換到結果頁面
+  document.getElementById('result-page').style.display = 'block';
+  document.querySelector('.card:first-of-type') && (document.querySelector('.card:first-of-type').style.display = 'none');
+  // 隱藏搜尋區
+  document.getElementById('search-section').style.display = 'none';
+  // 顯示摘要
+  var eLabel = currentEgfr ? 'eGFR ' + currentEgfr + ' ml/min/1.73m²' : '';
+  var sites = selectedSites.map(function(s) {
+    var titles = {uti:'泌尿道 UTI', pneumonia:'肺炎 Pneumonia', intraabdominal:'腹腔 Intra-abd',
+      ssti:'皮膚軟組織 SSTI', bacteremia:'菌血症 Bacteremia', hepatobiliary:'肝膽道 Hepatobiliary',
+      cns:'中樞神經 CNS', bone:'骨骼關節 Bone/Joint', unknown:'感染源未明', neutropenia:'Neutropenia/免疫抑制'};
+    return titles[s] || s;
+  }).join('、');
+  var route = currentRoute === 'po' ? '口服 PO（出院用）' : 'IV + PO（全部）';
+  document.getElementById('result-summary').innerHTML =
+    '🏥 <strong>' + sites + '</strong> &nbsp;|&nbsp; 🫘 ' + eLabel + ' &nbsp;|&nbsp; 💊 ' + route;
+  // 捲到頂部
+  window.scrollTo({top: 0, behavior: 'smooth'});
+  renderResults();
+}
+
+function backToSearch() {
+  document.getElementById('result-page').style.display = 'none';
+  document.getElementById('search-section').style.display = 'block';
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function updateSearchBtn() {
+  var btn = document.getElementById('search-btn');
+  if (btn) {
+    btn.style.display = (currentEgfr !== null && selectedSites.length > 0) ? 'block' : 'none';
+  }
+}
+
 function updateSiteLockState() {
+  updateSearchBtn();
   var hasUnknown = selectedSites.indexOf('unknown') >= 0;
   var allSites = ['uti','pneumonia','intraabdominal','ssti','bacteremia','hepatobiliary','cns','bone'];
   allSites.forEach(function(s) {
@@ -453,7 +501,7 @@ var drugSources = {
   'Dicloxacillin':            'https://www.drugs.com/monograph/dicloxacillin.html',
   'Cloxacillin':              'https://www.drugs.com/monograph/cloxacillin.html',
   'Penicillin VK':            'https://www.drugs.com/monograph/penicillin-v-potassium.html',
-  'Amoxicillin-Clavulanate':  'https://www.drugs.com/monograph/amoxicillin-clavulanate-potassium.html',
+  'Amoxicillin-Clavulanate':  'https://www.drugs.com/amoxicillin_clavulanate.html',
   'Ampicillin-Sulbactam':     'https://www.drugs.com/monograph/ampicillin-sulbactam.html',
   'Piperacillin-Tazobactam':  'https://www.drugs.com/monograph/piperacillin-tazobactam.html',
   // Carbapenems / novel beta-lactams
@@ -1218,10 +1266,13 @@ function renderDrugCard(drug, site, isShared, isPO, egfr) {
   o += '<div class="abx-card" style="' + borderStyle + '">';
   o += '<div class="abx-header"><div>';
   o += '<div class="abx-name-row">';
-  o += '<span class="abx-name">' + drug.name + '</span>';
+  if (fdaUrl) {
+    o += '<span class="abx-name abx-name-link" data-drug="' + drug.name.replace(/"/g,"&quot;") + '" data-url="' + fdaUrl + '" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(121,192,255,0.6);">' + drug.name + '</span>';
+  } else {
+    o += '<span class="abx-name">' + drug.name + '</span>';
+  }
   if (drug.qtc)   o += '<span class="qtc-badge">⚡ QTc</span>';
   if (isShared)   o += '<span class="shared-badge">✦ 共同</span>';
-  if (fdaUrl)     o += '<a class="abx-fda-link" href="' + fdaUrl + '" target="_blank">📎 FDA</a>';
   o += '</div>';
   o += '<div class="abx-class">' + drug.class + '</div>';
   o += '</div>';
@@ -1345,6 +1396,213 @@ function renderResults() {
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').catch(()=>{});});
 }
+// ── DRUG INFO MODAL with Claude API ─────────────────────────────────────────
+var drugInfoCache = {};
+
+// Event delegation：監聽所有 data-drug 點擊
+document.addEventListener('click', function(e) {
+  var el = e.target;
+  if (el.classList.contains('abx-name-link') && el.dataset.drug) {
+    showDrugInfo(el.dataset.drug, el.dataset.url || '');
+  }
+});
+
+function showDrugInfo(drugName, fdaUrl) {
+  var modal   = document.getElementById('drug-modal');
+  var nameEl  = document.getElementById('modal-drug-name');
+  var fdaLink = document.getElementById('modal-fda-link');
+  var loading = document.getElementById('modal-loading');
+  var body    = document.getElementById('modal-body');
+  var errorEl = document.getElementById('modal-error');
+
+  nameEl.textContent = drugName;
+  fdaLink.href = fdaUrl || '#';
+  modal.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  loading.style.display = 'block';
+  body.style.display = 'none';
+  errorEl.style.display = 'none';
+
+  // 1. 先查記憶體快取
+  if (drugInfoCache[drugName]) {
+    loading.style.display = 'none';
+    body.style.display = 'block';
+    body.innerHTML = drugInfoCache[drugName];
+    return;
+  }
+
+  // 2. 再查 localStorage
+  var lsKey = 'abx_drug_' + drugName.replace(/[^a-zA-Z]/g,'_');
+  var cached = null;
+  try { cached = localStorage.getItem(lsKey); } catch(e) {}
+  if (cached) {
+    drugInfoCache[drugName] = cached;
+    loading.style.display = 'none';
+    body.style.display = 'block';
+    body.innerHTML = cached;
+    return;
+  }
+
+  // 3. 需要 API key
+  var apiKey = '';
+  try { apiKey = localStorage.getItem('abx_openai_key') || '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'; } catch(e) {}
+  if (!apiKey) {
+    loading.style.display = 'none';
+    errorEl.style.display = 'block';
+    errorEl.innerHTML = '<div style="margin-bottom:12px;">🔑 需要 Claude API Key 才能使用此功能</div>' +
+      '<input id="api-key-input" type="password" placeholder="sk-proj-...（OpenAI API Key）" style="width:100%;padding:8px;background:#21262d;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-family:monospace;font-size:12px;box-sizing:border-box;margin-bottom:8px;">' +
+      '<button onclick="saveApiKey()" style="width:100%;padding:8px;background:#238636;border:none;border-radius:6px;color:#fff;font-weight:700;cursor:pointer;">儲存並查詢</button>' +
+      '<div style="font-size:10px;color:#484f58;margin-top:8px;">Key 只儲存在你的瀏覽器，不會傳給任何人<br>取得 API Key: <a href="https://platform.openai.com/api-keys" target="_blank" style="color:#58a6ff;">platform.openai.com/api-keys</a></div>';
+    return;
+  }
+
+  // 4. 呼叫 API
+  fetchDrugInfo(drugName, apiKey).then(function(resultHtml) {
+    drugInfoCache[drugName] = resultHtml;
+    try { localStorage.setItem(lsKey, resultHtml); } catch(e) {}
+    loading.style.display = 'none';
+    body.style.display = 'block';
+    body.innerHTML = resultHtml;
+  }).catch(function(err) {
+    loading.style.display = 'none';
+    errorEl.style.display = 'block';
+    errorEl.innerHTML = '⚠️ 查詢失敗：' + err.message +
+      '<br><small style="color:#8b949e;">請確認 API Key 正確，或直接前往 <a href="' + (fdaUrl||'#') + '" target="_blank" style="color:#58a6ff;">Drugs.com</a></small>' +
+      '<br><button onclick="clearApiKey()" style="margin-top:8px;padding:4px 10px;background:#da3633;border:none;border-radius:4px;color:#fff;cursor:pointer;font-size:11px;">重設 API Key</button>';
+  });
+}
+
+function saveApiKey() {
+  var input = document.getElementById('api-key-input');
+  if (!input || !input.value.trim()) return;
+  var key = input.value.trim();
+  try { localStorage.setItem('abx_openai_key', key); } catch(e) {}
+  var drugName = document.getElementById('modal-pending-drug').value;
+  var fdaUrl   = document.getElementById('modal-pending-url').value;
+  showDrugInfo(drugName, fdaUrl);
+}
+
+function clearApiKey() {
+  try { localStorage.removeItem('abx_openai_key'); } catch(e) {}
+  document.getElementById('modal-error').innerHTML = '🔑 API Key 已清除，請重新輸入';
+}
+
+function refreshDrugInfo() {
+  var drugName = document.getElementById('modal-drug-name').textContent.trim();
+  var fdaUrl   = document.getElementById('modal-fda-link').href;
+  if (!drugName) return;
+  // 清除此藥的記憶體快取
+  delete drugInfoCache[drugName];
+  // 清除此藥的 localStorage 快取
+  var lsKey = 'abx_drug_' + drugName.replace(/[^a-zA-Z]/g,'_');
+  try { localStorage.removeItem(lsKey); } catch(e) {}
+  // 重新查詢
+  showDrugInfo(drugName, fdaUrl);
+}
+
+function clearAllDrugCache() {
+  // 清除所有藥物快取（保留 API Key）
+  drugInfoCache = {};
+  try {
+    var keys = Object.keys(localStorage);
+    keys.forEach(function(k) {
+      if (k.startsWith('abx_drug_')) localStorage.removeItem(k);
+    });
+  } catch(e) {}
+  alert('✅ 所有藥物快取已清除！下次點藥名將重新查詢。');
+}
+
+function closeDrugModal() {
+  document.getElementById('drug-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+document.getElementById('drug-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeDrugModal();
+});
+
+async function fetchDrugInfo(drugName, apiKey) {
+  var p1 = 'You are an infectious disease pharmacist. Provide a comprehensive, detailed English drug summary for ' + drugName + ' for use by resident physicians.';
+  var p2 = 'Output ONLY HTML directly (no markdown code blocks). Use exactly this structure for each section:';
+  var p3 = "<div class='drug-section'><div class='section-title'>TITLE</div><div class='section-content'>CONTENT</div></div>";
+  var p4 = 'Section 1: 💊 Dosing & Administration — Include ALL of: standard IV dose, extended infusion dose (if applicable), oral dose (if available), renal dosing table for ALL stages (eGFR ≥60, 30-59, 15-29, <15, HD, CRRT if relevant). Use HTML <table> with columns: eGFR Range | Dose | Interval | Notes.';
+  var p5 = '🦠 Antimicrobial Spectrum — List ALL organisms covered/not covered. Organize by: Gram-positive (list each organism + coverage level), Gram-negative (list each organism), Anaerobes, Atypicals/Fungi/Others. Use HTML table: Organism | Coverage (Good/Partial/None) | Notes.';
+  var p6 = "⚠️ Adverse Effects — List ALL known adverse effects comprehensively (10+ items minimum). IMPORTANT: Sort by severity - put the most serious/important adverse effects (marked with <span class='warn'>⚠️ TEXT</span>) at the TOP of the list first, then less severe ones below. Include frequency if known, monitoring parameters.";
+  var p7 = '🚫 Contraindications & Drug Interactions — List ALL contraindications, precautions, and clinically significant drug interactions with mechanism.';
+  var p8 = '🏥 Clinical Pearls — When to use as first-line, when to avoid, special populations (renal/hepatic/pregnancy/pediatric), PK/PD considerations, resistance patterns, stewardship notes.';
+  var prompt = [p1,p2,p3,p4,p5,p6,p7,p8].join(' ');
+
+  var response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + apiKey
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      max_tokens: 3000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!response.ok) {
+    var errData = await response.json().catch(function(){return {};});
+    throw new Error(errData.error ? errData.error.message : 'HTTP ' + response.status);
+  }
+  var data = await response.json();
+  var text = data.choices[0].message.content;
+
+  // 移除可能的 markdown code block
+  text = text.replace(/^```html?\n?/,'').replace(/\n?```$/,'');
+
+  return '<style>' +
+    '.drug-section{margin-bottom:16px;border:1px solid #21262d;border-radius:8px;overflow:hidden;}' +
+    '.section-title{background:#161b22;padding:9px 14px;font-weight:700;font-size:12px;font-family:"SF Mono",monospace;color:#e6edf3;border-bottom:1px solid #21262d;}' +
+    '.section-content{padding:12px 14px;font-size:12px;line-height:1.7;color:#c9d1d9;}' +
+    '.section-content table{width:100%;border-collapse:collapse;margin:6px 0;font-size:11px;}' +
+    '.section-content th{background:#21262d;padding:6px 10px;text-align:left;color:#8b949e;font-family:"SF Mono",monospace;}' +
+    '.section-content td{padding:6px 10px;border-bottom:1px solid #21262d;vertical-align:top;}' +
+    '.section-content ul,.section-content ol{margin:4px 0;padding-left:18px;}' +
+    '.section-content li{margin:3px 0;}' +
+    '.warn{color:#f85149;font-weight:600;}' +
+    '.ok{color:#3fb950;}' +
+    '</style>' + text;
+}
+
+
 </script>
+
+<!-- Drug Info Modal -->
+<div id="drug-modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.7);overflow-y:auto;padding:16px;">
+  <div style="max-width:680px;margin:0 auto;background:#161b22;border:1px solid #30363d;border-radius:12px;overflow:hidden;">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:#0d1117;border-bottom:1px solid #30363d;">
+      <div>
+        <input type="hidden" id="modal-pending-drug" value="">
+      <input type="hidden" id="modal-pending-url" value="">
+      <div id="modal-drug-name" style="font-size:18px;font-weight:700;font-family:'SF Mono',monospace;color:#e6edf3;"></div>
+        <div id="modal-drug-class" style="font-size:11px;color:#8b949e;font-family:'SF Mono',monospace;margin-top:2px;"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <a id="modal-fda-link" href="#" target="_blank" style="font-size:11px;font-family:'SF Mono',monospace;color:#58a6ff;text-decoration:none;border:1px solid #1f6feb;padding:4px 10px;border-radius:4px;">📎 Drugs.com</a>
+        <button id="modal-refresh-btn" onclick="refreshDrugInfo()" title="清除快取並重新查詢" style="background:none;border:1px solid #30363d;color:#8b949e;font-size:12px;cursor:pointer;padding:4px 8px;border-radius:4px;font-family:'SF Mono',monospace;">🔄 重新整理</button>
+        <button onclick="closeDrugModal()" style="background:none;border:none;color:#8b949e;font-size:20px;cursor:pointer;padding:0 4px;line-height:1;">✕</button>
+      </div>
+    </div>
+    <!-- Content -->
+    <div id="modal-content" style="padding:20px;">
+      <div id="modal-loading" style="text-align:center;padding:40px;color:#8b949e;font-family:'SF Mono',monospace;">
+        <div style="font-size:28px;margin-bottom:14px;animation:spin 1.5s linear infinite;display:inline-block;">⚙️</div>
+        <div style="font-size:14px;color:#c9d1d9;font-weight:600;margin-bottom:8px;">由 AI 幫你整理藥物重點，請稍等！</div>
+        <div style="font-size:12px;color:#8b949e;">正在分析劑量、副作用、抗菌譜...</div>
+        <div style="font-size:10px;margin-top:8px;color:#484f58;">通常需要 5–15 秒</div>
+      </div>
+      <style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
+      <div id="modal-body" style="display:none;"></div>
+      <div id="modal-error" style="display:none;text-align:center;padding:30px;color:#f85149;font-family:'SF Mono',monospace;"></div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
