@@ -601,7 +601,7 @@ function showDiagnosisResults() {
   // 呼叫 Worker
   fetchDiagnosisInfo(diagnosis, currentEgfr, currentRoute).then(function(resultHtml) {
     // 加入腎功能警語
-    var warningBanner = '<div style="background:#1a0e00;border:1px solid #f0a030;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:11px;font-family:'SF Mono',monospace;color:#f0a030;line-height:1.6;">' +
+    var warningBanner = '<div style="background:#1a0e00;border:1px solid #f0a030;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:11px;color:#f0a030;line-height:1.6;">' +
       '⚠️ <strong>劑量僅供參考</strong>：此建議由 AI 根據 eGFR ' + currentEgfr + ' 即時生成。' +
       '腎功能劑量調整已依標準分期套用，但仍請<strong>點擊藥名查看完整腎功能分期劑量表</strong>後再用藥。' +
       '實際用藥請依院內 antibiogram 及主治醫師指示。</div>';
