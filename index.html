@@ -121,6 +121,18 @@ input[type="number"]:focus{border-color:var(--accent);}
 .shared-badge{display:inline-block;background:#0d2a1a;color:#3fb950;border:1px solid #1a4a2a;font-size:9px;font-family:var(--mono);padding:1px 5px;border-radius:3px;margin-left:4px;vertical-align:middle;}
 .po-only-note{background:#0d2a1a;border:1px solid #1a4a2a;border-radius:6px;padding:7px 12px;margin-bottom:10px;font-size:11px;color:#7ee787;font-family:var(--mono);}
 .hidden{display:none!important;}
+  .diag-chip{background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-size:10px;font-family:var(--mono);padding:4px 9px;border-radius:4px;cursor:pointer;transition:all .15s;}
+  .diag-chip:hover{border-color:var(--accent);color:var(--accent);}
+  .abx-result-card{margin-bottom:14px;border:1px solid #21262d;border-radius:8px;overflow:hidden;}
+  .arc-header{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#161b22;border-bottom:1px solid #21262d;}
+  .arc-tier{font-size:10px;font-family:'SF Mono',monospace;padding:2px 8px;border-radius:3px;background:#238636;color:#fff;font-weight:700;}
+  .arc-name{font-size:14px;font-weight:700;font-family:'SF Mono',monospace;color:#e6edf3;}
+  .arc-body{padding:10px 14px;}
+  .arc-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #21262d;font-size:12px;}
+  .arc-row:last-child{border-bottom:none;}
+  .arc-label{color:#8b949e;font-family:'SF Mono',monospace;min-width:80px;flex-shrink:0;}
+  .arc-value{color:#c9d1d9;line-height:1.5;}
+  .arc-diagnosis-note{background:#0d2f1a;border:1px solid #238636;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#7ee787;line-height:1.6;}
 </style>
 </head>
 <body>
@@ -165,6 +177,17 @@ input[type="number"]:focus{border-color:var(--accent);}
 </div>
 
 <!-- Kidney Function -->
+<!-- 搜尋模式切換 -->
+<div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;">
+  <button id="mode-btn-site" onclick="switchSearchMode('site')"
+    style="flex:1;padding:10px 0;font-size:12px;font-family:var(--mono);font-weight:700;border:none;cursor:pointer;background:var(--accent);color:#0d1117;transition:all .2s;">
+    📍 感染部位
+  </button>
+  <button id="mode-btn-diagnosis" onclick="switchSearchMode('diagnosis')"
+    style="flex:1;padding:10px 0;font-size:12px;font-family:var(--mono);font-weight:700;border:none;cursor:pointer;background:var(--surface2);color:var(--text2);transition:all .2s;">
+    🔬 確切診斷
+  </button>
+</div>
 <div class="section">
   <div class="label">腎功能輸入</div>
   <div class="card">
@@ -216,6 +239,47 @@ input[type="number"]:focus{border-color:var(--accent);}
   </div>
   <div class="multi-hint" id="multi-hint"></div>
   <button id="search-btn" onclick="showResults()" style="display:none;width:100%;margin-top:12px;padding:14px;background:var(--accent);color:#0d1117;font-weight:700;font-size:14px;font-family:var(--mono);border:none;border-radius:8px;cursor:pointer;letter-spacing:.05em;">🔍 查詢抗生素建議</button>
+</div>
+</div>
+
+<!-- 確切診斷輸入區 -->
+<div id="diagnosis-section" style="display:none;">
+  <div class="section">
+    <div class="label">確切診斷</div>
+    <div class="card">
+      <input id="diagnosis-input" type="text"
+        placeholder="輸入診斷，例如：攝護腺炎、急性腎盂腎炎、偽膜性結腸炎..."
+        style="width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;font-family:var(--mono);box-sizing:border-box;outline:none;margin-bottom:6px;"
+        oninput="updateDiagnosisBtn()" onkeydown="if(event.key==='Enter')showDiagnosisResults()">
+      <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:10px;">
+        💡 中英文均可，自動轉換成英文查詢
+      </div>
+      <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;">常用診斷快捷：</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;">
+        <button onclick="setDiagnosis('Acute Pyelonephritis')" class="diag-chip">急性腎盂腎炎</button>
+        <button onclick="setDiagnosis('Cystitis')" class="diag-chip">膀胱炎</button>
+        <button onclick="setDiagnosis('Prostatitis')" class="diag-chip">攝護腺炎</button>
+        <button onclick="setDiagnosis('Community-Acquired Pneumonia')" class="diag-chip">CAP 社區肺炎</button>
+        <button onclick="setDiagnosis('Hospital-Acquired Pneumonia')" class="diag-chip">HAP 院內肺炎</button>
+        <button onclick="setDiagnosis('Aspiration Pneumonia')" class="diag-chip">吸入性肺炎</button>
+        <button onclick="setDiagnosis('Clostridioides difficile Colitis')" class="diag-chip">C. diff 腸炎</button>
+        <button onclick="setDiagnosis('Acute Appendicitis')" class="diag-chip">急性闌尾炎</button>
+        <button onclick="setDiagnosis('Acute Cholangitis')" class="diag-chip">急性膽管炎</button>
+        <button onclick="setDiagnosis('Cellulitis')" class="diag-chip">蜂窩組織炎</button>
+        <button onclick="setDiagnosis('Necrotizing Fasciitis')" class="diag-chip">壞死性筋膜炎</button>
+        <button onclick="setDiagnosis('Bacterial Meningitis')" class="diag-chip">細菌性腦膜炎</button>
+        <button onclick="setDiagnosis('Infective Endocarditis')" class="diag-chip">感染性心內膜炎</button>
+        <button onclick="setDiagnosis('Septic Arthritis')" class="diag-chip">敗血性關節炎</button>
+        <button onclick="setDiagnosis('Febrile Neutropenia')" class="diag-chip">Febrile Neutropenia</button>
+        <button onclick="setDiagnosis('Diabetic Foot Infection')" class="diag-chip">糖尿病足部感染</button>
+        <button onclick="setDiagnosis('Osteomyelitis')" class="diag-chip">骨髓炎</button>
+      </div>
+      <button id="diagnosis-btn" onclick="showDiagnosisResults()" disabled
+        style="width:100%;padding:14px;background:var(--surface2);color:var(--text3);font-weight:700;font-size:14px;font-family:var(--mono);border:1px solid var(--border);border-radius:8px;cursor:not-allowed;letter-spacing:.05em;">
+        🔍 查詢抗生素建議
+      </button>
+    </div>
+  </div>
 </div>
 </div>
 
@@ -335,6 +399,7 @@ function updateKidney() {
 
   renderResults();
   updateSearchBtn();
+  updateDiagnosisBtn();
 }
 
 // ── SITE SELECTION ────────────────────────────────────────────────────────────
@@ -430,6 +495,114 @@ function updateSearchBtn() {
   if (btn) {
     btn.style.display = (currentEgfr !== null && selectedSites.length > 0) ? 'block' : 'none';
   }
+}
+
+// ── 搜尋模式切換 ─────────────────────────────────────────────────────────
+var currentSearchMode = 'site';
+
+function switchSearchMode(mode) {
+  currentSearchMode = mode;
+  var siteBtn       = document.getElementById('mode-btn-site');
+  var diagBtn       = document.getElementById('mode-btn-diagnosis');
+  var siteSection   = document.getElementById('search-section-sites');
+  var diagSection   = document.getElementById('diagnosis-section');
+  var routeSection  = document.getElementById('route-section');
+
+  if (mode === 'site') {
+    siteBtn.style.background = 'var(--accent)';
+    siteBtn.style.color = '#0d1117';
+    diagBtn.style.background = 'var(--surface2)';
+    diagBtn.style.color = 'var(--text2)';
+    if (siteSection)  siteSection.style.display = 'block';
+    if (diagSection)  diagSection.style.display = 'none';
+    if (routeSection) routeSection.style.display = 'block';
+  } else {
+    diagBtn.style.background = 'var(--accent)';
+    diagBtn.style.color = '#0d1117';
+    siteBtn.style.background = 'var(--surface2)';
+    siteBtn.style.color = 'var(--text2)';
+    if (siteSection)  siteSection.style.display = 'none';
+    if (diagSection)  diagSection.style.display = 'block';
+    if (routeSection) routeSection.style.display = 'block';
+  }
+}
+
+function setDiagnosis(diagEn) {
+  var input = document.getElementById('diagnosis-input');
+  input.value = diagEn;
+  updateDiagnosisBtn();
+}
+
+function updateDiagnosisBtn() {
+  var input = document.getElementById('diagnosis-input');
+  var btn   = document.getElementById('diagnosis-btn');
+  var hasText = input && input.value.trim().length > 0;
+  var hasEgfr = currentEgfr !== null;
+  if (btn) {
+    if (hasText && hasEgfr) {
+      btn.disabled = false;
+      btn.style.background = 'var(--accent)';
+      btn.style.color = '#0d1117';
+      btn.style.cursor = 'pointer';
+      btn.style.borderColor = 'var(--accent)';
+    } else {
+      btn.disabled = true;
+      btn.style.background = 'var(--surface2)';
+      btn.style.color = 'var(--text3)';
+      btn.style.cursor = 'not-allowed';
+      btn.style.borderColor = 'var(--border)';
+    }
+  }
+}
+
+function showDiagnosisResults() {
+  var input = document.getElementById('diagnosis-input');
+  if (!input || !input.value.trim()) return;
+  if (currentEgfr === null) return;
+
+  var diagnosis = input.value.trim();
+
+  // 切換到結果頁
+  document.getElementById('search-section').style.display = 'none';
+  document.getElementById('result-page').style.display = 'block';
+
+  // 顯示摘要
+  document.getElementById('result-summary').innerHTML =
+    '🔬 <strong>' + diagnosis + '</strong> &nbsp;|&nbsp; 🫘 eGFR ' + currentEgfr + ' ml/min/1.73m² &nbsp;|&nbsp; 💊 ' + (currentRoute === 'po' ? '口服 PO' : 'IV + PO');
+
+  // 顯示 loading
+  var resultsDiv = document.getElementById('results');
+  resultsDiv.innerHTML = '<div style="text-align:center;padding:50px 20px;color:#8b949e;">' +
+    '<div style="font-size:28px;margin-bottom:14px;display:inline-block;animation:spin 1.5s linear infinite;">⚙️</div>' +
+    '<div style="font-size:14px;color:#c9d1d9;font-weight:600;margin-bottom:8px;">由 AI 幫你整理抗生素建議，請稍等！</div>' +
+    '<div style="font-size:12px;">正在根據診斷與腎功能分析...</div>' +
+    '<div style="font-size:10px;margin-top:8px;color:#484f58;">通常需要 10–20 秒</div></div>';
+
+  window.scrollTo({top: 0, behavior: 'smooth'});
+
+  // 呼叫 Worker
+  fetchDiagnosisInfo(diagnosis, currentEgfr, currentRoute).then(function(resultHtml) {
+    resultsDiv.innerHTML = resultHtml;
+  }).catch(function(err) {
+    resultsDiv.innerHTML = '<div style="text-align:center;padding:30px;color:#f85149;">⚠️ 查詢失敗：' + err.message + '</div>';
+  });
+}
+
+async function fetchDiagnosisInfo(diagnosis, egfr, route) {
+  var response = await fetch('https://abx-api.dale199707.workers.dev/diagnosis', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ diagnosis: diagnosis, egfr: egfr, route: route })
+  });
+
+  if (!response.ok) {
+    var errData = await response.json().catch(function(){return {};});
+    throw new Error(errData.error ? errData.error.message : 'HTTP ' + response.status);
+  }
+  var data = await response.json();
+  var text = data.choices[0].message.content;
+  text = text.replace(/^```html?\n?/,'').replace(/\n?```$/,'');
+  return text;
 }
 
 function updateSiteLockState() {
